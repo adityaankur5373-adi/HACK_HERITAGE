@@ -13,14 +13,26 @@ function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-hidden min-h-[600px] lg:min-h-[680px]"
+      className="
+        relative
+        overflow-hidden
+        min-h-screen
+        lg:min-h-[800px]
+        -mb-px
+      "
     >
 
       {/* =========================================
           BACKGROUND IMAGE
       ========================================= */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="
+          absolute
+          inset-0
+          bg-cover
+          bg-center
+          bg-no-repeat
+        "
         style={{
           backgroundImage: "url('/images/bg.png')",
         }}
@@ -28,7 +40,6 @@ function Hero() {
 
       {/* =========================================
           LIGHT OVERLAY
-          35% white -> background remains visible
       ========================================= */}
       <div className="absolute inset-0 bg-white/35" />
 
@@ -39,12 +50,22 @@ function Hero() {
       {/* =========================================
           HERO CONTENT
       ========================================= */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div
+        className="
+          relative
+          z-10
+          max-w-7xl
+          mx-auto
+          px-4
+          sm:px-6
+          lg:px-8
+        "
+      >
 
         <div
           className="
-            min-h-[600px]
-            lg:min-h-[680px]
+            min-h-screen
+            lg:min-h-[800px]
 
             grid
             grid-cols-1
@@ -55,9 +76,13 @@ function Hero() {
 
             items-center
 
-            py-12
-            sm:py-16
-            lg:py-20
+            pt-24
+            sm:pt-28
+            lg:pt-24
+
+            pb-12
+            sm:pb-16
+            lg:pb-20
           "
         >
 
@@ -96,13 +121,11 @@ function Hero() {
                 shadow-sm
               "
             >
-
               <MapPin size={15} />
 
               <span>
                 {t.hero.badge}
               </span>
-
             </div>
 
 
@@ -127,13 +150,11 @@ function Hero() {
                 text-gray-900
               "
             >
-
               {t.hero.title}
 
               <span className="block text-green-800 mt-2">
                 {t.hero.titleHighlight}
               </span>
-
             </h1>
 
 

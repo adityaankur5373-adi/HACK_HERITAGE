@@ -11,11 +11,19 @@ const translations = {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(
-    localStorage.getItem("language") || "hi"
-  );
+  const [language, setLanguage] = useState(() => {
+    const savedLanguage = localStorage.getItem("language");
+
+    return savedLanguage === "en" || savedLanguage === "hi"
+      ? savedLanguage
+      : "hi";
+  });
 
   const changeLanguage = (lang) => {
+    if (lang !== "en" && lang !== "hi") {
+      return;
+    }
+
     setLanguage(lang);
     localStorage.setItem("language", lang);
   };

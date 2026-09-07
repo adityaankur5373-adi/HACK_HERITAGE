@@ -11,24 +11,17 @@ const en = {
 
   hero: {
     badge: "Jharkhand's Citizen Platform",
-
     title: "Your Problem,",
-
     titleHighlight: "Our Solution",
-
     description:
       "Report any problem and together let's build a better Jharkhand.",
-
     voice: "Report by Voice",
-
     text: "Report by Text",
   },
 
   howItWorks: {
     badge: "Simple & Transparent",
-
     title: "How It Works",
-
     subtitle:
       "A simple way to report problems and find solutions.",
 
@@ -59,50 +52,310 @@ const en = {
 
   footer: {
     brand: "JanSamadhan",
-
     tagline: "Your Problem, Our Solution",
 
     description:
       "Listening to every citizen of Jharkhand and connecting them with solutions.",
 
     platform: "Platform",
-
     reportProblem: "Report a Problem",
-
     trackProblem: "Track Your Problem",
-
     publicProblems: "Public Problems",
 
     about: "About Us",
 
     support: "Support",
-
     helpCenter: "Help Center",
-
     userGuide: "User Guide",
-
     faq: "Frequently Asked Questions",
 
     contact: "Contact Us",
-
     connect: "Connect With Us",
 
     address: "Ranchi, Jharkhand - 834001",
-
     email: "info@jansamadhan.jh.gov.in",
-
     phone: "1800-123-4567",
 
     secure: "Secure",
-
     trusted: "Trusted",
-
     transparent: "Transparent",
 
     publicInterest: "Committed to Public Interest",
 
     copyright:
       "© 2025 JanSamadhan | All Rights Reserved",
+  },
+
+  login: {
+    badge: "JanSamadhan",
+
+    title: "Welcome to",
+    titleHighlight: "JanSamadhan",
+
+    subtitle:
+      "Choose how you want to continue",
+
+    citizen: {
+      title: "Citizen",
+      description:
+        "Report public problems and track the status of your complaints.",
+      button: "Continue",
+    },
+
+    student: {
+      title: "Student",
+      description:
+        "Report campus and student issues, share feedback, and track their resolution.",
+      button: "Continue",
+    },
+
+    university: {
+      title: "University",
+      description:
+        "Receive, review and resolve student issues across departments and campus facilities.",
+      button: "Continue",
+    },
+
+    government: {
+      title: "Government",
+      description:
+        "Review public complaints, assign departments, and monitor issue resolution.",
+      button: "Continue",
+    },
+
+    bottomMessage:
+      "Your voice can help build a better Jharkhand.",
+
+    // ============================================================
+    // CITIZEN LOGIN
+    // ============================================================
+
+    citizenLogin: {
+      title: "Citizen Login",
+
+      subtitle:
+        "Login to report and track your problems.",
+
+      mobile:
+        "Mobile Number",
+
+      mobilePlaceholder:
+        "Enter 10-digit mobile number",
+
+      password:
+        "Password",
+
+      passwordPlaceholder:
+        "Enter your password",
+
+      loginButton:
+        "Login",
+
+      registerButton:
+        "Register",
+
+      registerText:
+        "Don't have an account?",
+
+      loggingIn:
+        "Logging in...",
+
+      invalidMobile:
+        "Enter a valid 10-digit Indian mobile number.",
+
+      passwordRequired:
+        "Password is required.",
+
+      loginFailed:
+        "Login failed. Please check your mobile number and password.",
+
+      networkError:
+        "Unable to connect to the server. Please try again.",
+    },
+
+    // ============================================================
+    // CITIZEN REGISTER
+    // ============================================================
+
+    citizenRegister: {
+      title: "Create Citizen Account",
+
+      subtitle:
+        "Create your account to report and track public problems.",
+
+      name:
+        "Full Name",
+
+      namePlaceholder:
+        "Enter your full name",
+
+      mobile:
+        "Mobile Number",
+
+      mobilePlaceholder:
+        "Enter 10-digit mobile number",
+
+      email:
+        "Email Address",
+
+      emailPlaceholder:
+        "Enter your email address (optional)",
+
+      password:
+        "Password",
+
+      passwordPlaceholder:
+        "Create a strong password",
+
+      address:
+        "Address",
+
+      addressPlaceholder:
+        "Enter your complete address",
+
+      city:
+        "City",
+
+      cityPlaceholder:
+        "Enter city",
+
+      state:
+        "State",
+
+      statePlaceholder:
+        "Enter state",
+
+      pincode:
+        "Pincode",
+
+      pincodePlaceholder:
+        "Enter 6-digit pincode",
+
+      passwordRequirements:
+        "Password requirements",
+
+      passwordMin:
+        "Minimum 8 characters",
+
+      passwordUpper:
+        "One uppercase letter",
+
+      passwordLower:
+        "One lowercase letter",
+
+      passwordNumber:
+        "One number",
+
+      passwordSpecial:
+        "One special character",
+
+      registerButton:
+        "Create Account",
+
+      loginButton:
+        "Login",
+
+      alreadyAccount:
+        "Already have an account?",
+
+      loginText:
+        "Login",
+
+      registering:
+        "Creating account...",
+
+      invalidName:
+        "Name must be at least 2 characters.",
+
+      invalidMobile:
+        "Enter a valid 10-digit Indian mobile number.",
+
+      invalidEmail:
+        "Enter a valid email address.",
+
+      passwordRequired:
+        "Password is required.",
+
+      invalidAddress:
+        "Address is required.",
+
+      invalidCity:
+        "City is required.",
+
+      invalidState:
+        "State is required.",
+
+      invalidPincode:
+        "Enter a valid 6-digit pincode.",
+
+      registrationFailed:
+        "Registration failed. Please check your details.",
+
+      networkError:
+        "Unable to connect to the server. Please try again.",
+        district:
+        "District",
+        districtPlaceholder:
+        "Enter the district",
+    },
+  },
+
+  roleAuth: {
+    roles: {
+      student: "Student",
+      university: "University",
+      government: "Government",
+    },
+    fields: {
+      name: { label: "Full Name", placeholder: "Enter your full name" },
+      universityName: { label: "University Name", placeholder: "Enter university name" },
+      email: { label: "Email Address", placeholder: "Enter your email" },
+      studentId: { label: "Student ID", placeholder: "Enter your student ID" },
+      universityId: { label: "University ID", placeholder: "Enter your university ID" },
+      registrationNumber: { label: "Registration Number", placeholder: "Enter registration number" },
+      employeeId: { label: "Employee ID", placeholder: "Enter employee ID" },
+      department: { label: "Department", placeholder: "Enter your department" },
+    },
+    backToRoles: "Back to roles",
+    create: "Create",
+    account: "Account",
+    login: "Login",
+    register: "Register",
+    createAccount: "Create Account",
+    password: "Password",
+    passwordPlaceholder: "Enter your password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+    pleaseWait: "Please wait...",
+    alreadyAccount: "Already have an account?",
+    noAccount: "Don't have an account?",
+    registerToAccess: "Register to access the",
+    signInTo: "Sign in to continue to the",
+    portal: "portal",
+    emailPasswordRequired: "Email and password are required.",
+    completeFields: "Please complete all the fields.",
+    passwordRequired: "Password must be at least 8 characters.",
+    networkError: "Unable to connect to the server. Please try again.",
+  },
+
+  dashboard: {
+    role: {
+      citizen: "Citizen",
+      student: "Student",
+      university: "University",
+      government: "Government",
+      user: "User",
+    },
+    title: "Dashboard",
+    logout: "Logout",
+    welcome: "Welcome back",
+    accountHolder: "Account holder",
+    workspace: "Your authenticated workspace is ready. Role-specific issue workflows can be added here.",
+    accountDetails: "Account details",
+    contact: "Email / contact",
+    roleLabel: "Role",
+    department: "Department",
+    studentId: "Student ID",
   },
 };
 

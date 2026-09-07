@@ -8,7 +8,6 @@ import {
 import { useLanguage } from "../../context/LanguageContext";
 
 function HowItWorks() {
-
   const { t } = useLanguage();
 
   const steps = [
@@ -17,19 +16,16 @@ function HowItWorks() {
       title: t.howItWorks.step1.title,
       description: t.howItWorks.step1.description,
     },
-
     {
       icon: Search,
       title: t.howItWorks.step2.title,
       description: t.howItWorks.step2.description,
     },
-
     {
       icon: Lightbulb,
       title: t.howItWorks.step3.title,
       description: t.howItWorks.step3.description,
     },
-
     {
       icon: CheckCircle,
       title: t.howItWorks.step4.title,
@@ -41,16 +37,54 @@ function HowItWorks() {
     <section
       id="how-it-works"
       className="
-        py-16
-        sm:py-20
-        lg:py-24
+        relative
+        overflow-hidden
 
-        bg-white
+        -mt-px
+
+        pt-10
+        sm:pt-12
+        lg:pt-14
+
+        pb-16
+        sm:pb-20
+        lg:pb-24
+
+        bg-transparent
       "
     >
 
+      {/* =========================================
+          SOFT TRANSITION FROM HERO
+      ========================================= */}
+
       <div
         className="
+          absolute
+          top-0
+          left-0
+          right-0
+          h-24
+
+          bg-gradient-to-b
+          from-white/0
+          via-white/70
+          to-transparent
+
+          pointer-events-none
+        "
+      />
+
+
+      {/* =========================================
+          CONTENT
+      ========================================= */}
+
+      <div
+        className="
+          relative
+          z-10
+
           max-w-7xl
           mx-auto
 
@@ -60,36 +94,41 @@ function HowItWorks() {
         "
       >
 
-        {/* ================================
+        {/* =========================================
             HEADING
-        ================================= */}
+        ========================================= */}
 
         <div
           className="
             text-center
-
             max-w-2xl
-
             mx-auto
           "
         >
 
           <span
             className="
-              inline-block
+              inline-flex
+              items-center
 
               px-4
               py-2
 
               rounded-full
 
-              bg-green-50
+              bg-green-50/80
+              backdrop-blur-sm
+
+              border
+              border-green-100
 
               text-green-800
 
               text-sm
 
               font-medium
+
+              shadow-sm
             "
           >
             {t.howItWorks.badge}
@@ -107,6 +146,8 @@ function HowItWorks() {
               font-bold
 
               text-gray-900
+
+              leading-tight
             "
           >
             {t.howItWorks.title}
@@ -115,7 +156,7 @@ function HowItWorks() {
 
           <p
             className="
-              mt-4
+              mt-3
 
               text-gray-600
 
@@ -129,21 +170,23 @@ function HowItWorks() {
         </div>
 
 
-        {/* ================================
+        {/* =========================================
             STEPS
-        ================================= */}
+        ========================================= */}
 
         <div
           className="
-            mt-12
+            mt-10
+            sm:mt-12
 
             grid
+
             grid-cols-1
             sm:grid-cols-2
             lg:grid-cols-4
 
-            gap-6
-            lg:gap-8
+            gap-5
+            lg:gap-7
           "
         >
 
@@ -157,10 +200,11 @@ function HowItWorks() {
                 className="
                   relative
 
-                  bg-green-50/60
+                  bg-green-50/55
+                  backdrop-blur-sm
 
                   border
-                  border-green-100
+                  border-green-100/80
 
                   rounded-2xl
 
@@ -169,7 +213,6 @@ function HowItWorks() {
                   text-center
 
                   hover:-translate-y-1
-
                   hover:shadow-lg
 
                   transition-all
@@ -191,7 +234,7 @@ function HowItWorks() {
 
                     rounded-full
 
-                    bg-white
+                    bg-white/90
 
                     text-green-800
 
@@ -202,6 +245,8 @@ function HowItWorks() {
                     flex
                     items-center
                     justify-center
+
+                    shadow-sm
                   "
                 >
                   {index + 1}
@@ -226,6 +271,8 @@ function HowItWorks() {
                     flex
                     items-center
                     justify-center
+
+                    shadow-md
                   "
                 >
                   <Icon size={25} />

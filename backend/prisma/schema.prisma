@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+enum Role {
+  CITIZEN
+  STUDENT
+  UNIVERSITY
+  GOVERNMENT
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+
+  citizen      Citizen?
+  student      Student?
+  university   University?
+  government   Government?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Citizen {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+
+  mobile       String   @unique
+  name         String
+  email        String?
+
+  dateOfBirth  DateTime?
+  gender       String?
+
+  address      String
+  city         String
+  district     String
+  state        String
+  pincode      String
+
+  profileImage String?
+  reportConversations ReportConversation[]
+  user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ reports Report[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model University {
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+
+  email              String    @unique
+  name               String
+  registrationNumber String    @unique
+
+  address            String?
+  city               String?
+  district           String?
+  state              String?
+  pincode            String?
+
+  phone              String?
+  website            String?
+
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  students           Student[]
+
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Student {
+  id           String      @id @default(cuid())
+  userId       String      @unique
+
+  universityId String
+
+  email        String      @unique
+  name         String
+  studentId    String      @unique
+
+  course       String?
+  department   String?
+  year         Int?
+  phone        String?
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  university   University  @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Government {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+
+  email       String   @unique
+  name        String
+  employeeId  String   @unique
+
+  department  String
+  designation String?
+  office      String?
+
+  district    String?
+  state       String?
+  phone       String?
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model ReportConversation {
+  id        String   @id @default(cuid())
+  citizenId String
+
+  status    String   @default("ACTIVE")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  citizen Citizen @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+ report Report?
+  messages  ReportMessage[]
+}
+
+model ReportMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+conversation ReportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+
+model Report {
+  id             String   @id @default(cuid())
+
+  citizenId      String
+  conversationId String   @unique
+
+  title          String
+  description    String
+  category       String
+  priority       String
+
+  address        String?
+  city           String?
+  district       String?
+  state          String?
+  pincode        String?
+
+  status         String   @default("DRAFT")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  citizen        Citizen @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  conversation   ReportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+   
+  statusHistory ReportStatusHistory[]
+  media ReportMedia[]
+}
+
+
+model ReportStatusHistory {
+  id        String   @id @default(cuid())
+
+  reportId  String
+  status    String
+  note      String?
+  changedBy String?
+
+  createdAt DateTime @default(now())
+
+  report Report @relation( fields: [reportId],references: [id], onDelete: Cascade)
+}
+
+model ReportMedia {
+  id        String   @id @default(cuid())
+
+  reportId  String
+
+  type      String
+  url       String
+
+  filename  String?
+  mimeType  String?
+  size      Int?
+
+  createdAt DateTime @default(now())
+
+  report Report @relation(fields: [reportId],references: [id], onDelete: Cascade)
+   
+}
+
