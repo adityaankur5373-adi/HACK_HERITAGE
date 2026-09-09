@@ -66,10 +66,9 @@ export const getReportById = async (req, res) => {
       });
     }
 
-    const report = await prisma.report.findFirst({
+    const report = await prisma.report.findUnique({
       where: {
         id: reportId,
-        citizenId: citizen.id,
       },
       include: {
         media: true,
