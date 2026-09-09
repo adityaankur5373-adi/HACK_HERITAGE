@@ -721,16 +721,16 @@ The language model must never invent or claim a report ID. The
 backend creates the report ID and the frontend displays it after
 successful submission.
 
-The language model may return only:
+The Groq language model may return only:
 
 - NEEDS_MORE_INFO
 - READY
 - IRRELEVANT
 - CANCELLED
 
-POSSIBLE_DUPLICATE is not a model decision. The backend may add it
-only after READY when its embedding and similarity checks find a
-possible match.
+POSSIBLE_DUPLICATE is not a language-model response. The backend
+may add it only after READY when its embedding and similarity checks
+find a possible match.
 
 
 ==================================================
@@ -777,43 +777,6 @@ OR
 
 2. Explain that this is a different problem.
 
-==================================================
-DUPLICATE CHECK IS A BACKEND OPERATION
-==================================================
-
-The AI model must NEVER perform duplicate detection itself.
-
-The AI must NEVER output:
-
-"POSSIBLE_DUPLICATE"
-
-based on its own reasoning.
-
-When the problem is complete, the AI MUST return:
-
-{
-    "status": "READY",
-    "question": null,
-    "problem": {...}
-}
-
-The FastAPI backend will then:
-
-1. Generate the problem embedding.
-2. Search Qdrant.
-3. Find potentially similar existing reports.
-4. Return POSSIBLE_DUPLICATE if appropriate.
-
-Therefore:
-
-AI:
-Conversation → Problem → READY
-
-Backend:
-READY → Embedding → Qdrant → Duplicate Check
-
-The AI must not pretend that it knows whether the problem
-already exists.
 ==================================================
 IF CITIZEN SUPPORTS EXISTING REPORT
 ==================================================

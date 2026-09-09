@@ -65,6 +65,8 @@ def find_similar_reports(problem: dict):
                 "reportId": payload.get("reportId"),
                 "title": payload.get("title"),
                 "category": payload.get("category"),
+                "address": payload.get("address"),
+                "city": payload.get("city"),
                 "district": payload.get("district"),
                 "state": payload.get("state"),
                 "status": payload.get("status"),

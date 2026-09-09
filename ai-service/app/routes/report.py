@@ -112,9 +112,16 @@ def report_problem(request: ReportRequest):
                 "Checking Qdrant for similar reports..."
             )
 
-            similar_reports = find_similar_reports(
-                problem
-            )
+            try:
+                similar_reports = find_similar_reports(
+                    problem
+                )
+            except Exception as duplicate_error:
+                print(
+                    "Duplicate check unavailable; continuing with READY:",
+                    duplicate_error,
+                )
+                similar_reports = []
 
             print(
                 "Similar reports found:",

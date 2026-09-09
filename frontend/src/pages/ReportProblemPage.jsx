@@ -1597,6 +1597,30 @@ function ReportProblemPage() {
                             </p>
                           )}
 
+                          {[
+                            supportedReport.address,
+                            supportedReport.city,
+                            supportedReport.district,
+                            supportedReport.state,
+                            supportedReport.pincode,
+                          ].some(Boolean) && (
+                            <p className="flex items-start gap-1">
+                              <MapPin size={15} className="mt-0.5 shrink-0 text-emerald-700" />
+                              <span>
+                                <span className="font-semibold">Location:</span>{" "}
+                                {[
+                                  supportedReport.address,
+                                  supportedReport.city,
+                                  supportedReport.district,
+                                  supportedReport.state,
+                                  supportedReport.pincode,
+                                ]
+                                  .filter(Boolean)
+                                  .join(", ")}
+                              </span>
+                            </p>
+                          )}
+
                           {supportedReport.status && (
                             <p>
                               <span className="font-semibold">
@@ -1710,7 +1734,7 @@ function ReportProblemPage() {
               INPUT AREA
           ================================================== */}
 
-          {!draftReport && !supportedReport && (
+          {!supportedReport && (
             <div className="border-t border-slate-200 bg-white p-3 sm:p-4">
 
               <div className="flex items-end gap-2 sm:gap-3">
@@ -1799,7 +1823,7 @@ function ReportProblemPage() {
             SMALL FOOTER INFORMATION
         ================================================== */}
 
-        {!draftReport && !supportedReport && (
+        {!supportedReport && (
           <div className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] text-slate-400">
             <ShieldAlert size={13} />
             <span>
