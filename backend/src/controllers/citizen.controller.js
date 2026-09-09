@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.js";
-import { sendToAI } from "../services/ai.service.js";
+import { sendToAI,storeReportVector } from "../services/ai.service.js";
 
 export const reportProblem = async (req, res) => {
   try {
@@ -187,19 +187,20 @@ export const reportProblem = async (req, res) => {
 };
 
 
+
+
 export const submitReport = async (req, res) => {
   try {
     const { reportId } = req.params;
-
     const userId = req.user.id;
 
-    // --------------------------------------------------
+    // ---------------------------------------------
     // GET CITIZEN
-    // --------------------------------------------------
+    // ---------------------------------------------
 
     const citizen = await prisma.citizen.findUnique({
       where: {
-        userId: userId,
+        userId,
       },
     });
 
@@ -209,9 +210,9 @@ export const submitReport = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
+    // ---------------------------------------------
     // FIND DRAFT REPORT
-    // --------------------------------------------------
+    // ---------------------------------------------
 
     const report = await prisma.report.findFirst({
       where: {
@@ -227,52 +228,155 @@ export const submitReport = async (req, res) => {
       });
     }
 
-    // --------------------------------------------------
-    // SUBMIT REPORT + CREATE HISTORY
-    // --------------------------------------------------
+    // ---------------------------------------------
+    // SUBMIT REPORT + CLOSE CONVERSATION
+    // ---------------------------------------------
 
-    const submittedReport = await prisma.$transaction(
-      async (tx) => {
+    const submittedReport = await prisma.$transaction(async (tx) => {
+      // 1. Change report status
+      const updatedReport = await tx.report.update({
+        where: {
+          id: report.id,
+        },
 
-        // 1. Change report status
-        const updatedReport = await tx.report.update({
-          where: {
-            id: report.id,
-          },
-          data: {
-            status: "SUBMITTED",
-          },
-        });
+        data: {
+          status: "SUBMITTED",
+        },
+      });
 
-        // 2. Create first status history
-        await tx.reportStatusHistory.create({
-          data: {
-            reportId: report.id,
-            status: "SUBMITTED",
-            note: "Report submitted by citizen",
-            changedBy: citizen.id,
-          },
-        });
+      // 2. Create status history
+      await tx.reportStatusHistory.create({
+        data: {
+          reportId: report.id,
+          status: "SUBMITTED",
+          note: "Report submitted by citizen",
+          changedBy: citizen.id,
+        },
+      });
 
-        return updatedReport;
-      }
-    );
+      // 3. Close the conversation
+      await tx.reportConversation.update({
+        where: {
+          id: report.conversationId,
+        },
 
-    // --------------------------------------------------
+        data: {
+          status: "COMPLETED",
+        },
+      });
+
+      return updatedReport;
+    });
+
+    // ---------------------------------------------
+    // STORE SUBMITTED REPORT IN QDRANT
+    // ---------------------------------------------
+
+    try {
+      await storeReportVector({
+        id: submittedReport.id,
+
+        title: submittedReport.title,
+
+        description: submittedReport.description,
+
+        category: submittedReport.category,
+
+        priority: submittedReport.priority,
+
+        address: submittedReport.address,
+
+        city: submittedReport.city,
+
+        district: submittedReport.district,
+
+        state: submittedReport.state,
+
+        pincode: submittedReport.pincode,
+      });
+    } catch (vectorError) {
+      console.error(
+        "Vector indexing failed:",
+        vectorError.message
+      );
+
+      // Do not fail the report submission.
+      // The report is already SUBMITTED.
+      //
+      // Qdrant indexing can be retried later.
+    }
+
+    // ---------------------------------------------
     // RESPONSE
-    // --------------------------------------------------
+    // ---------------------------------------------
 
     return res.status(200).json({
       message: "Report submitted successfully",
 
       report: submittedReport,
+
+      conversationClosed: true,
     });
 
   } catch (error) {
-    console.error("Submit Report Error:", error);
+    console.error(
+      "Submit Report Error:",
+      error
+    );
 
     return res.status(500).json({
       message: "Failed to submit report",
+    });
+  }
+};
+
+export const getReportConversation = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user.id;
+
+    const citizen = await prisma.citizen.findUnique({
+      where: { userId },
+    });
+
+    if (!citizen) {
+      return res.status(404).json({
+        message: "Citizen profile not found",
+      });
+    }
+
+    const conversation = await prisma.reportConversation.findFirst({
+      where: {
+        id: conversationId,
+        citizenId: citizen.id,
+      },
+      include: {
+        messages: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        report: true,
+      },
+    });
+
+    if (!conversation) {
+      return res.status(404).json({
+        message: "Conversation not found",
+      });
+    }
+
+    return res.status(200).json({
+      conversationId: conversation.id,
+      status: conversation.status,
+      messages: conversation.messages,
+      report: conversation.report,
+    });
+  } catch (error) {
+    console.error("Get Report Conversation Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to fetch report conversation",
     });
   }
 };

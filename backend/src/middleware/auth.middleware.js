@@ -18,9 +18,13 @@ export function protect(req, res, next) {
       process.env.JWT_SECRET
     );
 
-    req.user = decoded;
+    // Normalize the authenticated user
+    req.user = {
+      id: decoded.userId,
+    };
 
     next();
+
   } catch (error) {
     return res.status(401).json({
       success: false,

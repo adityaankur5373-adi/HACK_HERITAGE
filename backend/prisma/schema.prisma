@@ -50,6 +50,9 @@ model Citizen {
   reportConversations ReportConversation[]
   user         User @relation(fields: [userId], references: [id], onDelete: Cascade)
  reports Report[]
+
+  reportSupports ReportSupport[]
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -174,6 +177,7 @@ model Report {
    
   statusHistory ReportStatusHistory[]
   media ReportMedia[]
+   supports ReportSupport[]
 }
 
 
@@ -207,4 +211,17 @@ model ReportMedia {
   report Report @relation(fields: [reportId],references: [id], onDelete: Cascade)
    
 }
+model ReportSupport {
+  id        String   @id @default(cuid())
 
+  reportId  String
+  citizenId String
+
+  createdAt DateTime @default(now())
+
+  report Report @relation( fields: [reportId],references: [id],onDelete: Cascade )
+
+  citizen Citizen @relation( fields: [citizenId],references: [id],onDelete: Cascade)
+
+  @@unique([reportId, citizenId])
+}

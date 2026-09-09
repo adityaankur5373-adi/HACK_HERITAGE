@@ -1,6 +1,6 @@
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ChatMessage(BaseModel):
@@ -9,13 +9,6 @@ class ChatMessage(BaseModel):
 
 
 class CitizenLocation(BaseModel):
-    """
-    Trusted location from the backend/JWT-authenticated
-    citizen profile.
-
-    This is NOT automatically the problem location.
-    """
-
     address: Optional[str] = None
     city: Optional[str] = None
     district: Optional[str] = None
@@ -24,23 +17,11 @@ class CitizenLocation(BaseModel):
 
 
 class ReportRequest(BaseModel):
-    """
-    Conversation sent from Express to FastAPI.
-    """
-
     messages: List[ChatMessage]
-
     citizen_location: Optional[CitizenLocation] = None
 
 
 class ProblemLocation(BaseModel):
-    """
-    Actual location where the problem is occurring.
-
-    This must NOT be confused with the citizen's
-    registered location.
-    """
-
     address: Optional[str] = None
     city: Optional[str] = None
     district: Optional[str] = None
@@ -63,14 +44,43 @@ class Problem(BaseModel):
     location: ProblemLocation
 
 
+# ---------------------------------------------
+# DUPLICATE REPORT
+# ---------------------------------------------
+
+class DuplicateReport(BaseModel):
+    reportId: Optional[str] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    district: Optional[str] = None
+    state: Optional[str] = None
+    status: Optional[str] = None
+    score: float
+
+
+# ---------------------------------------------
+# DUPLICATE CHECK
+# ---------------------------------------------
+
+class DuplicateCheck(BaseModel):
+    hasSimilar: bool
+    matches: List[DuplicateReport] = Field(
+        default_factory=list
+    )
+
+
+# ---------------------------------------------
+# FINAL AI RESPONSE
+# ---------------------------------------------
 class ReportResponse(BaseModel):
     status: Literal[
         "NEEDS_MORE_INFO",
         "IRRELEVANT",
         "READY",
-        "CANCELLED"
+        "CANCELLED",
+        "POSSIBLE_DUPLICATE"
     ]
 
     question: Optional[str] = None
     problem: Optional[Problem] = None
-  
+    duplicateCheck: Optional[DuplicateCheck] = None

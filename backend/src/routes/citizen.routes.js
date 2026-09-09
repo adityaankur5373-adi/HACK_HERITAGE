@@ -1,5 +1,9 @@
 import express from "express";
-import { reportProblem,submitReport } from "../controllers/citizen.controller.js";
+import {
+  getReportConversation,
+  reportProblem,
+  submitReport,
+} from "../controllers/citizen.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 import {uploadReportMedia} from "../controllers/reportMedia.controller.js";
 import {
@@ -12,6 +16,12 @@ router.post(
   "/report",
   protect,
   reportProblem
+);
+
+router.get(
+  "/report/conversation/:conversationId",
+  protect,
+  getReportConversation
 );
 
 router.post(

@@ -1,4 +1,5 @@
 import os
+import uuid
 
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
@@ -72,16 +73,24 @@ def store_report(
     payload: dict,
 ):
 
+    # Qdrant requires UUID or unsigned integer
+    qdrant_point_id = str(uuid.uuid4())
+
+    # Store our actual Prisma Report ID in payload
+    payload["reportId"] = report_id
+
     client.upsert(
         collection_name=QDRANT_COLLECTION,
         points=[
             PointStruct(
-                id=report_id,
+                id=qdrant_point_id,
                 vector=embedding,
                 payload=payload,
             )
         ],
     )
+
+    return qdrant_point_id
 
 
 def search_similar_reports(
@@ -97,3 +106,13 @@ def search_similar_reports(
     )
 
     return result.points
+
+
+def count_reports():
+
+    result = client.count(
+        collection_name=QDRANT_COLLECTION,
+        exact=True,
+    )
+
+    return result.count

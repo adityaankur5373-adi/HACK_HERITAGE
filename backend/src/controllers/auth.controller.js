@@ -822,12 +822,19 @@ export async function loginGovernment(req, res) {
 | GET CURRENT USER
 |--------------------------------------------------------------------------
 */
-
 export async function getMe(req, res) {
   try {
+    // Make sure authentication middleware provided the user ID
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User authentication information missing",
+      });
+    }
+
     const user = await prisma.user.findUnique({
       where: {
-        id: req.user.userId,
+        id: req.user.id,
       },
 
       include: {
@@ -845,7 +852,6 @@ export async function getMe(req, res) {
       },
     });
 
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -853,14 +859,12 @@ export async function getMe(req, res) {
       });
     }
 
-
     if (!user.isActive) {
       return res.status(403).json({
         success: false,
         message: "Account is disabled",
       });
     }
-
 
     return res.status(200).json({
       success: true,

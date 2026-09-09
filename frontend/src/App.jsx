@@ -5,6 +5,11 @@ import Login from "./pages/Login";
 import CitizenAuth from "./pages/CitizenAuth";
 import RoleAuth from "./pages/RoleAuth";
 import Dashboard from "./pages/Dashboard";
+import CitizenDashboard from "./pages/CitizenDashboard";
+import ReportProblemPage from "./pages/ReportProblemPage";
+import MyProblemsPage from "./pages/MyProblemsPage";
+import ProblemDetailsPage from "./pages/ProblemDetailsPage";
+import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
@@ -36,7 +41,11 @@ function App() {
         />
 
         <Route element={<ProtectedRoute role="CITIZEN" />}>
-          <Route path="/citizen/dashboard" element={<Dashboard />} />
+          <Route path="/citizen/dashboard" element={<CitizenDashboard />} />
+          <Route path="/citizen/report-problem" element={<ReportProblemPage />} />
+          <Route path="/citizen/my-problems" element={<MyProblemsPage />} />
+          <Route path="/citizen/problems/:reportId" element={<ProblemDetailsPage />} />
+          <Route path="/citizen/profile" element={<ProfilePage />} />
         </Route>
         <Route element={<ProtectedRoute role="STUDENT" />}>
           <Route path="/student/dashboard" element={<Dashboard />} />

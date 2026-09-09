@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.routes.report import router as report_router
-
+from app.routes.vector_router import router as vector_router
 
 app = FastAPI(
     title="JanSamadhan AI Service",
@@ -11,7 +11,7 @@ app = FastAPI(
 
 
 app.include_router(report_router)
-
+app.include_router(vector_router)
 
 @app.get("/")
 def root():

@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from groq import Groq
 
 from app.prompts.report_prompt import REPORT_SYSTEM_PROMPT
+from app.schemas.report import ReportResponse
 
 
 load_dotenv()
@@ -78,7 +79,6 @@ location must be treated as two separate things.
         }
     ]
 
-    # Add previous conversation
     for message in messages:
 
         groq_messages.append({
@@ -106,4 +106,11 @@ location must be treated as two separate things.
 
     result = response.choices[0].message.content
 
-    return json.loads(result)
+    # Convert JSON string → Python dictionary
+    result = json.loads(result)
+
+    # --------------------------------------------------
+    # VALIDATE + CONVERT TO PYDANTIC MODEL
+    # --------------------------------------------------
+
+    return ReportResponse.model_validate(result)

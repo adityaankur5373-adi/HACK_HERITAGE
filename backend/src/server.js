@@ -1,9 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 import citizenRoutes from "./routes/citizen.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-
+import reportRoutes from "./routes/report.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 
@@ -14,6 +16,9 @@ import { errorHandler } from "./middleware/error.middleware.js";
 */
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 /*
@@ -40,6 +45,11 @@ app.use(
 
 
 app.use(express.json());
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "..", "uploads"))
+);
 
 
 app.use(
@@ -74,7 +84,10 @@ app.use(
   authRoutes
 );
 app.use("/api/citizen", citizenRoutes);
-
+app.use(
+  "/api/reports",
+  reportRoutes
+);
 /*
 |--------------------------------------------------------------------------
 | 404 Handler

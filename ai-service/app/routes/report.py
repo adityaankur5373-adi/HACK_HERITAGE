@@ -7,6 +7,10 @@ from app.schemas.report import (
 
 from app.services.groq_service import process_report
 
+from app.services.duplicate_service import (
+    find_similar_reports,
+)
+
 
 router = APIRouter(
     prefix="/api/ai",
@@ -22,9 +26,9 @@ def report_problem(request: ReportRequest):
 
     try:
 
-        # ---------------------------------------------
-        # CHECK MESSAGES
-        # ---------------------------------------------
+        # ==================================================
+        # 1. VALIDATE MESSAGES
+        # ==================================================
 
         if not request.messages:
             raise HTTPException(
@@ -32,19 +36,17 @@ def report_problem(request: ReportRequest):
                 detail="Messages cannot be empty"
             )
 
-        # ---------------------------------------------
-        # CHECK LAST MESSAGE
-        # ---------------------------------------------
+        last_message = request.messages[-1].content.strip()
 
-        if not request.messages[-1].content.strip():
+        if not last_message:
             raise HTTPException(
                 status_code=400,
                 detail="Message cannot be empty"
             )
 
-        # ---------------------------------------------
-        # CITIZEN LOCATION
-        # ---------------------------------------------
+        # ==================================================
+        # 2. CITIZEN LOCATION
+        # ==================================================
 
         citizen_location = None
 
@@ -54,9 +56,9 @@ def report_problem(request: ReportRequest):
                 request.citizen_location.model_dump()
             )
 
-        # ---------------------------------------------
-        # CONVERT MESSAGES
-        # ---------------------------------------------
+        # ==================================================
+        # 3. CONVERT CONVERSATION
+        # ==================================================
 
         messages = [
             {
@@ -66,14 +68,95 @@ def report_problem(request: ReportRequest):
             for message in request.messages
         ]
 
-        # ---------------------------------------------
-        # SEND CONVERSATION TO GROQ
-        # ---------------------------------------------
+        # ==================================================
+        # 4. SEND CONVERSATION TO GROQ
+        # ==================================================
 
         result = process_report(
             messages,
             citizen_location
         )
+
+        # ==================================================
+        # 5. AI NEEDS MORE INFORMATION
+        # ==================================================
+
+        if result.status == "NEEDS_MORE_INFO":
+
+            return result
+
+        # ==================================================
+        # 6. IRRELEVANT PROBLEM
+        # ==================================================
+
+        if result.status == "IRRELEVANT":
+
+            return result
+
+        # ==================================================
+        # 7. READY → DUPLICATE CHECK
+        # ==================================================
+
+        if (
+            result.status == "READY"
+            and result.problem
+        ):
+
+            problem = result.problem.model_dump()
+
+            print(
+                "AI determined problem is READY."
+            )
+
+            print(
+                "Checking Qdrant for similar reports..."
+            )
+
+            similar_reports = find_similar_reports(
+                problem
+            )
+
+            print(
+                "Similar reports found:",
+                len(similar_reports)
+            )
+
+            # ==================================================
+            # 8. POSSIBLE DUPLICATE
+            # ==================================================
+
+            if similar_reports:
+
+                print(
+                    "Possible duplicate detected."
+                )
+
+                return {
+                    "status": "POSSIBLE_DUPLICATE",
+
+                    "question": None,
+
+                    "problem": result.problem,
+
+                    "duplicateCheck": {
+                        "hasSimilar": True,
+                        "matches": similar_reports,
+                    },
+                }
+
+            # ==================================================
+            # 9. NO DUPLICATE
+            # ==================================================
+
+            print(
+                "No similar report found."
+            )
+
+            return result
+
+        # ==================================================
+        # 10. FALLBACK
+        # ==================================================
 
         return result
 
@@ -82,7 +165,10 @@ def report_problem(request: ReportRequest):
 
     except Exception as error:
 
-        print("AI Report Error:", error)
+        print(
+            "AI Report Error:",
+            error
+        )
 
         raise HTTPException(
             status_code=500,
