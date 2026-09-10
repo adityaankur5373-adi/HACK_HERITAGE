@@ -11,7 +11,12 @@ import MyProblemsPage from "./pages/MyProblemsPage";
 import ProblemDetailsPage from "./pages/ProblemDetailsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-
+import GovernmentDashboard from "./pages/GovernmentDashboard";
+import GovernmentReportsPage from "./pages/GovernmentReportsPage";
+import GovernmentReportDetailsPage from "./pages/GovernmentReportDetailsPage";
+import GovernmentInfoPage from "./pages/GovernmentInfoPage";
+import GovernmentNotificationsPage from "./pages/GovernmentNotificationsPage";
+import GovernmentAnalyticsPage from "./pages/GovernmentAnalyticsPage";
 function App() {
   return (
     <BrowserRouter>
@@ -54,7 +59,15 @@ function App() {
           <Route path="/university/dashboard" element={<Dashboard />} />
         </Route>
         <Route element={<ProtectedRoute role="GOVERNMENT" />}>
-          <Route path="/government/dashboard" element={<Dashboard />} />
+          <Route path="/government/dashboard" element={<GovernmentDashboard />} />
+          <Route path="/government/reports" element={<GovernmentReportsPage />} />
+          <Route path="/government/reports/:reportId" element={<GovernmentReportDetailsPage />} />
+          <Route path="/government/notifications"  element={<GovernmentNotificationsPage />}/>
+          <Route path="/government/profile" element={<GovernmentInfoPage mode="profile" />} />
+          <Route
+  path="/government/analytics"
+  element={<GovernmentAnalyticsPage />}
+/>
         </Route>
       </Routes>
     </BrowserRouter>

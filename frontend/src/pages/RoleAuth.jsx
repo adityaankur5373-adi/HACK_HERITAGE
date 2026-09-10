@@ -42,6 +42,10 @@ const roleConfig = {
       ["email", "email"],
       ["employeeId", "employeeId"],
       ["department", "department"],
+      ["designation", "designation"],
+      ["office", "office"],
+      ["district", "district"],
+      ["state", "state"],
     ],
   },
 };
@@ -124,7 +128,7 @@ function RoleAuth({ role }) {
       </div>
 
       <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
-        <section className="w-full max-w-md rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8">
+        <section className={`w-full rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8 ${role === "government" && isRegister ? "max-w-2xl" : "max-w-md"}`}>
           <button
             type="button"
             onClick={() => navigate("/login")}
@@ -154,7 +158,9 @@ function RoleAuth({ role }) {
           </p>
 
           <form onSubmit={submit} className="space-y-4">
-            {isRegister && config.fields.map(([field, fieldKey]) => (
+            {isRegister && (
+              <div className={role === "government" ? "grid gap-4 sm:grid-cols-2" : "space-y-4"}>
+                {config.fields.map(([field, fieldKey]) => (
               <label key={field} className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-700">{t.roleAuth.fields[fieldKey].label}</span>
                 <div className="relative">
@@ -172,7 +178,9 @@ function RoleAuth({ role }) {
                   />
                 </div>
               </label>
-            ))}
+                ))}
+              </div>
+            )}
 
             {!isRegister && (
               <label className="block">

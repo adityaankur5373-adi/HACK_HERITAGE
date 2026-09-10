@@ -64,6 +64,30 @@ function Dashboard() {
                   <dd className="mt-1 font-medium text-slate-800">{user.department}</dd>
                 </div>
               )}
+              {user?.designation && (
+                <div>
+                  <dt className="text-slate-400">{t.dashboard.designation}</dt>
+                  <dd className="mt-1 font-medium text-slate-800">{user.designation}</dd>
+                </div>
+              )}
+              {user?.office && (
+                <div>
+                  <dt className="text-slate-400">{t.dashboard.office}</dt>
+                  <dd className="mt-1 font-medium text-slate-800">{user.office}</dd>
+                </div>
+              )}
+              {user?.district && (
+                <div>
+                  <dt className="text-slate-400">{t.dashboard.district}</dt>
+                  <dd className="mt-1 font-medium text-slate-800">{user.district}</dd>
+                </div>
+              )}
+              {user?.state && (
+                <div>
+                  <dt className="text-slate-400">{t.dashboard.state}</dt>
+                  <dd className="mt-1 font-medium text-slate-800">{user.state}</dd>
+                </div>
+              )}
               {user?.studentId && (
                 <div>
                   <dt className="text-slate-400">{t.dashboard.studentId}</dt>

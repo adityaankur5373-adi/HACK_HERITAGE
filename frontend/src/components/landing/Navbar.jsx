@@ -2,9 +2,11 @@ import { Globe, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "../../context/LanguageContext";
+import useAuthStore from "../../store/authStore";
 
 function Navbar() {
   const { language, changeLanguage, t } = useLanguage();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const navigate = useNavigate();
 
@@ -138,7 +140,14 @@ function Navbar() {
             ========================================= */}
 
             <button
-              onClick={() => navigate("/login")}
+              type="button"
+              onClick={() =>
+                navigate(
+                  isAuthenticated
+                    ? "/citizen/dashboard"
+                    : "/login"
+                )
+              }
               className="
                 flex
                 items-center

@@ -30,6 +30,40 @@ const EMPTY_AI_MESSAGE = {
   timestamp: new Date().toISOString(),
 };
 
+function getStoredMessageText(message) {
+  if (message.role !== "assistant") {
+    return message.content;
+  }
+
+  try {
+    const response = JSON.parse(message.content);
+
+    if (response.question) {
+      return response.question;
+    }
+
+    if (response.status === "READY") {
+      return "Your problem details are ready for review.";
+    }
+
+    if (response.status === "POSSIBLE_DUPLICATE") {
+      return "A similar problem has already been reported. Please review it below.";
+    }
+
+    if (response.status === "CANCELLED") {
+      return "The report process was cancelled.";
+    }
+
+    if (response.status === "IRRELEVANT") {
+      return "This does not appear to be a civic problem report.";
+    }
+  } catch {
+    return message.content;
+  }
+
+  return message.content;
+}
+
 function ReportProblemPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -52,19 +86,39 @@ function ReportProblemPage() {
     const savedConversationId =
       sessionStorage.getItem("citizenConversationId") || "";
 
+    // No active conversation = fresh chat
+    if (!savedConversationId) {
+      return [
+        {
+          ...EMPTY_AI_MESSAGE,
+          timestamp: new Date().toISOString(),
+        },
+      ];
+    }
+
     const saved = sessionStorage.getItem(
-      `citizenMessages_${savedConversationId || "default"}`
+      `citizenMessages_${savedConversationId}`
     );
 
     if (saved) {
       try {
         return JSON.parse(saved);
       } catch {
-        return [EMPTY_AI_MESSAGE];
+        return [
+          {
+            ...EMPTY_AI_MESSAGE,
+            timestamp: new Date().toISOString(),
+          },
+        ];
       }
     }
 
-    return [EMPTY_AI_MESSAGE];
+    return [
+      {
+        ...EMPTY_AI_MESSAGE,
+        timestamp: new Date().toISOString(),
+      },
+    ];
   });
 
   const [inputValue, setInputValue] = useState("");
@@ -90,6 +144,10 @@ function ReportProblemPage() {
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
 
+  // ======================================================
+  // RESTORE CONVERSATION
+  // ======================================================
+
   useEffect(() => {
     if (!conversationId) {
       return undefined;
@@ -100,31 +158,74 @@ function ReportProblemPage() {
     const restoreConversation = async () => {
       try {
         const response = await api.get(
-          `/citizen/report/conversation/${encodeURIComponent(conversationId)}`
+          `/citizen/report/conversation/${encodeURIComponent(
+            conversationId
+          )}`
         );
+
         const data = response.data || {};
 
         if (!active) {
           return;
         }
 
-        if (Array.isArray(data.messages) && data.messages.length > 0) {
-          const restoredMessages = data.messages.map((message) => ({
+        // ----------------------------------------------
+        // COMPLETED CONVERSATION
+        // ----------------------------------------------
+
+        if (data.status === "COMPLETED") {
+          sessionStorage.removeItem("citizenConversationId");
+          sessionStorage.removeItem(
+            `citizenMessages_${conversationId}`
+          );
+
+          setConversationId("");
+
+          setMessages([
+            {
+              ...EMPTY_AI_MESSAGE,
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+
+          setDraftReport(null);
+          setSupportedReport(null);
+
+          return;
+        }
+
+        // ----------------------------------------------
+        // RESTORE MESSAGES
+        // ----------------------------------------------
+
+        if (
+          Array.isArray(data.messages) &&
+          data.messages.length > 0
+        ) {
+          const restoredMessages = data.messages.map(
+            (message) => ({
               role: message.role,
-              content: message.content,
+              content: getStoredMessageText(message),
               timestamp: message.createdAt,
-            }));
+            })
+          );
 
           setMessages((currentMessages) => {
-            const mergedMessages = [...restoredMessages, ...currentMessages];
-            const uniqueMessages = mergedMessages.filter(
-              (message, index, messages) =>
-                messages.findIndex(
-                  (candidate) =>
-                    candidate.role === message.role &&
-                    candidate.content === message.content
-                ) === index
-            );
+            const mergedMessages = [
+              ...restoredMessages,
+              ...currentMessages,
+            ];
+
+            const uniqueMessages =
+              mergedMessages.filter(
+                (message, index, messages) =>
+                  messages.findIndex(
+                    (candidate) =>
+                      candidate.role === message.role &&
+                      candidate.content ===
+                        message.content
+                  ) === index
+              );
 
             return uniqueMessages.sort(
               (first, second) =>
@@ -133,6 +234,10 @@ function ReportProblemPage() {
             );
           });
         }
+
+        // ----------------------------------------------
+        // RESTORE DRAFT
+        // ----------------------------------------------
 
         if (data.report?.status === "DRAFT") {
           setDraftReport({
@@ -144,12 +249,58 @@ function ReportProblemPage() {
               state: data.report.state || null,
               pincode: data.report.pincode || null,
             },
-            attachments: data.report.media?.length || 0,
+            attachments:
+              data.report.media?.length || 0,
           });
+        }
+
+        // ----------------------------------------------
+        // RESTORE DUPLICATE
+        // ----------------------------------------------
+
+        const latestStructuredResponse =
+          [...(data.messages || [])]
+            .reverse()
+            .find(
+              (message) =>
+                message.role === "assistant"
+            );
+
+        if (latestStructuredResponse) {
+          try {
+            const structuredResponse = JSON.parse(
+              latestStructuredResponse.content
+            );
+
+            const match =
+              structuredResponse.duplicateCheck
+                ?.matches?.[0];
+
+            if (
+              structuredResponse.status ===
+                "POSSIBLE_DUPLICATE" &&
+              match
+            ) {
+              setSupportedReport({
+                ...match,
+                id:
+                  match.id ||
+                  match.reportId,
+                reportId:
+                  match.reportId ||
+                  match.id,
+              });
+            }
+          } catch {
+            // Older assistant messages may contain plain text.
+          }
         }
       } catch (err) {
         if (err.response?.status !== 404) {
-          console.error("Restore report conversation error:", err);
+          console.error(
+            "Restore report conversation error:",
+            err
+          );
         }
       }
     };
@@ -161,6 +312,10 @@ function ReportProblemPage() {
     };
   }, [conversationId]);
 
+  // ======================================================
+  // LOAD DRAFT
+  // ======================================================
+
   useEffect(() => {
     if (!editReportId) {
       return undefined;
@@ -170,16 +325,30 @@ function ReportProblemPage() {
 
     const loadDraft = async () => {
       try {
-        const response = await api.get(`/reports/${encodeURIComponent(editReportId)}`);
-        const report = response.data?.report || response.data;
+        const response = await api.get(
+          `/reports/${encodeURIComponent(editReportId)}`
+        );
+
+        const report =
+          response.data?.report ||
+          response.data;
 
         if (!active || report?.status !== "DRAFT") {
           return;
         }
 
-        const nextConversationId = report.conversationId || "";
+        const nextConversationId =
+          report.conversationId || "";
+
         setConversationId(nextConversationId);
-        sessionStorage.setItem("citizenConversationId", nextConversationId);
+
+        if (nextConversationId) {
+          sessionStorage.setItem(
+            "citizenConversationId",
+            nextConversationId
+          );
+        }
+
         setDraftReport({
           ...report,
           location: {
@@ -189,11 +358,15 @@ function ReportProblemPage() {
             state: report.state || null,
             pincode: report.pincode || null,
           },
-          attachments: report.media?.length || 0,
+          attachments:
+            report.media?.length || 0,
         });
       } catch (err) {
         if (active) {
-          setError(err.response?.data?.message || "Unable to load the draft report.");
+          setError(
+            err.response?.data?.message ||
+              "Unable to load the draft report."
+          );
         }
       }
     };
@@ -211,17 +384,28 @@ function ReportProblemPage() {
 
   useEffect(() => {
     if (chatRef.current) {
-      chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      chatRef.current.scrollTop =
+        chatRef.current.scrollHeight;
     }
-  }, [messages, isSending, draftReport, supportedReport]);
+  }, [
+    messages,
+    isSending,
+    draftReport,
+    supportedReport,
+  ]);
 
   // ======================================================
   // SAVE CONVERSATION LOCALLY
   // ======================================================
 
   useEffect(() => {
+    // Do not save messages without a conversation
+    if (!conversationId) {
+      return;
+    }
+
     sessionStorage.setItem(
-      `citizenMessages_${conversationId || "default"}`,
+      `citizenMessages_${conversationId}`,
       JSON.stringify(messages)
     );
   }, [messages, conversationId]);
@@ -242,7 +426,10 @@ function ReportProblemPage() {
         setCopiedReportId(false);
       }, 2000);
     } catch (error) {
-      console.error("Unable to copy report ID:", error);
+      console.error(
+        "Unable to copy report ID:",
+        error
+      );
     }
   };
 
@@ -265,38 +452,56 @@ function ReportProblemPage() {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, newUserMessage]);
+    setMessages((prev) => [
+      ...prev,
+      newUserMessage,
+    ]);
 
     setInputValue("");
     setIsSending(true);
 
     try {
       // ----------------------------------------------
-      // SEND ONLY JSON
+      // SEND MESSAGE
       // ----------------------------------------------
 
-      const response = await api.post("/citizen/report", {
-        message,
-        conversationId: conversationId || undefined,
-      });
+      const response = await api.post(
+        "/citizen/report",
+        {
+          message,
+          conversationId:
+            conversationId || undefined,
+        }
+      );
 
       const data = response.data || {};
+
+      // ----------------------------------------------
+      // IMPORTANT:
+      // BACKEND MUST RETURN NEW CONVERSATION ID
+      // ----------------------------------------------
+
+      const nextConversationId =
+        data.conversationId;
+
+      if (!nextConversationId) {
+        throw new Error(
+          "Backend did not return a conversationId."
+        );
+      }
 
       // ----------------------------------------------
       // SAVE CONVERSATION ID
       // ----------------------------------------------
 
-      const nextConversationId =
-        data.conversationId || conversationId;
+      setConversationId(
+        nextConversationId
+      );
 
-      if (nextConversationId) {
-        setConversationId(nextConversationId);
-
-        sessionStorage.setItem(
-          "citizenConversationId",
-          nextConversationId
-        );
-      }
+      sessionStorage.setItem(
+        "citizenConversationId",
+        nextConversationId
+      );
 
       // ----------------------------------------------
       // AI RESPONSE
@@ -313,12 +518,17 @@ function ReportProblemPage() {
       // ----------------------------------------------
 
       if (
-        data.status === "POSSIBLE_DUPLICATE" &&
+        data.status ===
+          "POSSIBLE_DUPLICATE" &&
         !aiMessage
       ) {
         aiMessage =
           "A similar problem has already been reported. Please review the existing report below.";
       }
+
+      // ----------------------------------------------
+      // SAVE AI MESSAGE
+      // ----------------------------------------------
 
       if (aiMessage) {
         setMessages((prev) => [
@@ -329,8 +539,10 @@ function ReportProblemPage() {
             status: data.status,
             problem: data.problem,
             reportId: data.reportId,
-            duplicateCheck: data.duplicateCheck,
-            timestamp: new Date().toISOString(),
+            duplicateCheck:
+              data.duplicateCheck,
+            timestamp:
+              new Date().toISOString(),
           },
         ]);
       }
@@ -385,14 +597,6 @@ function ReportProblemPage() {
 
         setDraftReport(nextDraft);
 
-        // ----------------------------------------------
-        // IMPORTANT
-        // ----------------------------------------------
-        // DO NOT UPLOAD MEDIA HERE.
-        //
-        // Media can only be selected AFTER READY.
-        // ----------------------------------------------
-
         setAttachments([]);
 
         setError("");
@@ -402,10 +606,14 @@ function ReportProblemPage() {
       // POSSIBLE DUPLICATE
       // ==================================================
 
-      if (data.status === "POSSIBLE_DUPLICATE") {
+      if (
+        data.status ===
+        "POSSIBLE_DUPLICATE"
+      ) {
         const match =
           data.similarReport ||
-          data.duplicateCheck?.matches?.[0];
+          data.duplicateCheck
+            ?.matches?.[0];
 
         setDraftReport(null);
 
@@ -422,7 +630,8 @@ function ReportProblemPage() {
               match.id,
 
             score:
-              typeof match.score === "number"
+              typeof match.score ===
+              "number"
                 ? match.score
                 : null,
           });
@@ -435,7 +644,9 @@ function ReportProblemPage() {
       // IRRELEVANT
       // ==================================================
 
-      if (data.status === "IRRELEVANT") {
+      if (
+        data.status === "IRRELEVANT"
+      ) {
         setDraftReport(null);
         setSupportedReport(null);
       }
@@ -444,16 +655,21 @@ function ReportProblemPage() {
       // CANCELLED
       // ==================================================
 
-      if (data.status === "CANCELLED") {
+      if (
+        data.status === "CANCELLED"
+      ) {
         setDraftReport(null);
         setSupportedReport(null);
       }
-
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Send report message error:",
+        err
+      );
 
       setError(
         err.response?.data?.message ||
+          err.message ||
           "Something went wrong. Please try again."
       );
 
@@ -463,7 +679,8 @@ function ReportProblemPage() {
           role: "assistant",
           content:
             "Sorry, I couldn't process that message. Please try again.",
-          timestamp: new Date().toISOString(),
+          timestamp:
+            new Date().toISOString(),
         },
       ]);
     } finally {
@@ -490,7 +707,8 @@ function ReportProblemPage() {
 
   const toggleVoiceInput = () => {
     const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+      window.SpeechRecognition ||
+      window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setVoiceError(
@@ -498,6 +716,7 @@ function ReportProblemPage() {
           ? "आपके ब्राउज़र में आवाज़ पहचान उपलब्ध नहीं है। Chrome या Edge का उपयोग करें।"
           : "Voice input is not supported in this browser. Please use Chrome or Edge."
       );
+
       return;
     }
 
@@ -506,12 +725,19 @@ function ReportProblemPage() {
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
+    const recognition =
+      new SpeechRecognition();
+
+    recognition.lang =
+      language === "hi"
+        ? "hi-IN"
+        : "en-IN";
+
     recognition.continuous = true;
     recognition.interimResults = true;
 
-    recognitionRef.current = recognition;
+    recognitionRef.current =
+      recognition;
 
     recognition.onstart = () => {
       setVoiceError("");
@@ -519,16 +745,25 @@ function ReportProblemPage() {
     };
 
     recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
+      const transcript = Array.from(
+        event.results
+      )
         .slice(event.resultIndex)
-        .filter((result) => result.isFinal)
-        .map((result) => result[0]?.transcript || "")
+        .filter(
+          (result) => result.isFinal
+        )
+        .map(
+          (result) =>
+            result[0]?.transcript || ""
+        )
         .join(" ")
         .trim();
 
       if (transcript) {
         setInputValue((current) =>
-          current.trim() ? `${current.trim()} ${transcript}` : transcript
+          current.trim()
+            ? `${current.trim()} ${transcript}`
+            : transcript
         );
       }
     };
@@ -539,10 +774,12 @@ function ReportProblemPage() {
           language === "hi"
             ? "माइक्रोफ़ोन की अनुमति नहीं मिली। ब्राउज़र में माइक्रोफ़ोन Allow करें।"
             : "Microphone permission was denied. Allow microphone access in your browser.",
+
         "service-not-allowed":
           language === "hi"
             ? "ब्राउज़र की speech service उपलब्ध नहीं है। Chrome या Edge आज़माएं।"
             : "The browser speech service is unavailable. Please try Chrome or Edge.",
+
         "no-speech":
           language === "hi"
             ? "कोई आवाज़ नहीं मिली। माइक्रोफ़ोन के पास बोलकर फिर से प्रयास करें।"
@@ -555,6 +792,7 @@ function ReportProblemPage() {
             ? "आवाज़ पहचान में समस्या हुई। कृपया फिर से प्रयास करें।"
             : "Voice recognition failed. Please try again.")
       );
+
       setIsListening(false);
     };
 
@@ -568,6 +806,7 @@ function ReportProblemPage() {
     } catch (error) {
       recognitionRef.current = null;
       setIsListening(false);
+
       setVoiceError(
         language === "hi"
           ? "माइक्रोफ़ोन शुरू नहीं हो सका। कृपया फिर से प्रयास करें।"
@@ -576,10 +815,13 @@ function ReportProblemPage() {
     }
   };
 
-  useEffect(() => () => {
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-  }, []);
+  useEffect(
+    () => () => {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    },
+    []
+  );
 
   // ======================================================
   // MEDIA UPLOAD
@@ -591,10 +833,6 @@ function ReportProblemPage() {
     );
 
     event.target.value = "";
-
-    // ----------------------------------------------
-    // IMPORTANT
-    // ----------------------------------------------
 
     if (!draftReport?.id) {
       setError(
@@ -610,11 +848,12 @@ function ReportProblemPage() {
     // VALIDATE FILES
     // ----------------------------------------------
 
-    const validFiles = selectedFiles.filter(
-      (file) =>
-        file.type.startsWith("image/") ||
-        file.type.startsWith("video/")
-    );
+    const validFiles =
+      selectedFiles.filter(
+        (file) =>
+          file.type.startsWith("image/") ||
+          file.type.startsWith("video/")
+      );
 
     if (!validFiles.length) {
       setError(
@@ -631,24 +870,30 @@ function ReportProblemPage() {
     // CREATE LOCAL PREVIEWS
     // ----------------------------------------------
 
-    const mapped = validFiles.map((file) => ({
-      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+    const mapped = validFiles.map(
+      (file) => ({
+        id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
 
-      file,
+        file,
 
-      name: file.name,
+        name: file.name,
 
-      type: file.type.startsWith("video/")
-        ? "video"
-        : "image",
+        type: file.type.startsWith(
+          "video/"
+        )
+          ? "video"
+          : "image",
 
-      preview:
-        file.type.startsWith("image/")
-          ? URL.createObjectURL(file)
-          : "",
+        preview:
+          file.type.startsWith(
+            "image/"
+          )
+            ? URL.createObjectURL(file)
+            : "",
 
-      uploading: true,
-    }));
+        uploading: true,
+      })
+    );
 
     setAttachments((prev) => [
       ...prev,
@@ -698,16 +943,11 @@ function ReportProblemPage() {
             }
           : prev
       );
-
     } catch (err) {
       console.error(
         "Media upload error:",
         err
       );
-
-      // ----------------------------------------------
-      // REMOVE FAILED FILES
-      // ----------------------------------------------
 
       const failedIds = mapped.map(
         (item) => item.id
@@ -716,7 +956,9 @@ function ReportProblemPage() {
       setAttachments((prev) =>
         prev.filter(
           (item) =>
-            !failedIds.includes(item.id)
+            !failedIds.includes(
+              item.id
+            )
         )
       );
 
@@ -724,7 +966,6 @@ function ReportProblemPage() {
         err.response?.data?.message ||
           "Unable to upload media."
       );
-
     } finally {
       setUploading(false);
     }
@@ -747,7 +988,9 @@ function ReportProblemPage() {
   // SUPPORT EXISTING REPORT
   // ======================================================
 
-  const handleSupport = async (reportId) => {
+  const handleSupport = async (
+    reportId
+  ) => {
     if (!reportId) return;
 
     try {
@@ -772,7 +1015,6 @@ function ReportProblemPage() {
             : prev
         );
       }
-
     } catch (err) {
       console.error(err);
 
@@ -820,6 +1062,13 @@ function ReportProblemPage() {
       setError("");
 
       // ----------------------------------------------
+      // SAVE OLD CONVERSATION ID
+      // ----------------------------------------------
+
+      const oldConversationId =
+        conversationId;
+
+      // ----------------------------------------------
       // SUBMIT DRAFT
       // ----------------------------------------------
 
@@ -858,25 +1107,43 @@ function ReportProblemPage() {
       );
 
       // ----------------------------------------------
-      // CLOSE CURRENT FRONTEND SESSION
+      // CLEAR OLD CONVERSATION
       // ----------------------------------------------
 
       sessionStorage.removeItem(
         "citizenConversationId"
       );
 
+      if (oldConversationId) {
+        sessionStorage.removeItem(
+          `citizenMessages_${oldConversationId}`
+        );
+      }
+
+      // Remove old default cache
       sessionStorage.removeItem(
-        `citizenMessages_${conversationId}`
+        "citizenMessages_default"
       );
 
       // ----------------------------------------------
-      // CLEAR CURRENT STATE
+      // RESET CHAT
       // ----------------------------------------------
+
+      setConversationId("");
+
+      setMessages([
+        {
+          ...EMPTY_AI_MESSAGE,
+          timestamp:
+            new Date().toISOString(),
+        },
+      ]);
 
       setDraftReport(null);
       setAttachments([]);
-
-      setConversationId("");
+      setSupportedReport(null);
+      setInputValue("");
+      setError("");
 
       // ----------------------------------------------
       // GO TO TRACKING PAGE
@@ -885,7 +1152,6 @@ function ReportProblemPage() {
       navigate(
         `/citizen/problems/${submitted.id}`
       );
-
     } catch (err) {
       console.error(
         "Submit report error:",
@@ -896,7 +1162,6 @@ function ReportProblemPage() {
         err.response?.data?.message ||
           "Unable to submit the report right now."
       );
-
     } finally {
       setSubmitLoading(false);
     }
@@ -906,7 +1171,9 @@ function ReportProblemPage() {
   // LOCATION TEXT
   // ======================================================
 
-  const getLocationText = (location) => {
+  const getLocationText = (
+    location
+  ) => {
     if (!location) {
       return "Location not provided";
     }
@@ -967,23 +1234,25 @@ function ReportProblemPage() {
                   </h2>
 
                 </div>
+
               </div>
 
               {/* CURRENT CONVERSATION */}
 
-              {conversationId && !draftReport && (
-                <div className="hidden rounded-xl bg-slate-50 px-3 py-2 text-right sm:block">
+              {conversationId &&
+                !draftReport && (
+                  <div className="hidden rounded-xl bg-slate-50 px-3 py-2 text-right sm:block">
 
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Conversation
-                  </p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      Conversation
+                    </p>
 
-                  <p className="max-w-[130px] truncate font-mono text-xs text-slate-600">
-                    {conversationId}
-                  </p>
+                    <p className="max-w-[130px] truncate font-mono text-xs text-slate-600">
+                      {conversationId}
+                    </p>
 
-                </div>
-              )}
+                  </div>
+                )}
 
             </div>
 
@@ -998,105 +1267,101 @@ function ReportProblemPage() {
             className="h-[58vh] min-h-[420px] space-y-5 overflow-y-auto border-t border-slate-200 bg-[#f8faf9] p-4 sm:p-6"
           >
 
-            {/* ==================================================
-                MESSAGES
-            ================================================== */}
+            {/* MESSAGES */}
 
-            {messages.map((message, index) => {
+            {messages.map(
+              (message, index) => {
+                const isUser =
+                  message.role ===
+                  "user";
 
-              const isUser =
-                message.role === "user";
-
-              return (
-                <div
-                  key={`${message.role}-${index}`}
-                  className={`flex ${
-                    isUser
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-
+                return (
                   <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-3 shadow-sm sm:max-w-[78%] ${
+                    key={`${message.role}-${index}`}
+                    className={`flex ${
                       isUser
-                        ? "rounded-br-md bg-emerald-700 text-white"
-                        : "rounded-bl-md border border-slate-200 bg-white text-slate-700"
+                        ? "justify-end"
+                        : "justify-start"
                     }`}
                   >
 
-                    <p
-                      className={`whitespace-pre-wrap text-sm leading-6 ${
+                    <div
+                      className={`max-w-[88%] rounded-2xl px-4 py-3 shadow-sm sm:max-w-[78%] ${
                         isUser
-                          ? "text-white"
-                          : "text-slate-700"
+                          ? "rounded-br-md bg-emerald-700 text-white"
+                          : "rounded-bl-md border border-slate-200 bg-white text-slate-700"
                       }`}
                     >
-                      {message.content}
-                    </p>
 
-                    {/* ==================================================
-                        READY MINI CARD
-                    ================================================== */}
+                      <p
+                        className={`whitespace-pre-wrap text-sm leading-6 ${
+                          isUser
+                            ? "text-white"
+                            : "text-slate-700"
+                        }`}
+                      >
+                        {message.content}
+                      </p>
 
-                    {!isUser &&
-                      message.status ===
-                        "READY" &&
-                      message.reportId && (
-                        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                      {/* READY MINI CARD */}
 
-                          <div className="flex items-center gap-2 text-emerald-700">
+                      {!isUser &&
+                        message.status ===
+                          "READY" &&
+                        message.reportId && (
+                          <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
 
-                            <CheckCircle2
-                              size={18}
-                            />
+                            <div className="flex items-center gap-2 text-emerald-700">
 
-                            <span className="font-bold">
-                              Report details are ready
-                            </span>
+                              <CheckCircle2
+                                size={18}
+                              />
+
+                              <span className="font-bold">
+                                Report details are ready
+                              </span>
+
+                            </div>
+
+                            <div className="mt-3 grid gap-2 text-sm text-slate-700">
+
+                              <p>
+                                <span className="font-semibold">
+                                  Title:
+                                </span>{" "}
+                                {message.problem?.title ||
+                                  "Untitled"}
+                              </p>
+
+                              <p>
+                                <span className="font-semibold">
+                                  Category:
+                                </span>{" "}
+                                {message.problem?.category ||
+                                  "General"}
+                              </p>
+
+                              <p>
+                                <span className="font-semibold">
+                                  Priority:
+                                </span>{" "}
+                                {message.problem?.priority ||
+                                  "MEDIUM"}
+                              </p>
+
+                            </div>
 
                           </div>
+                        )}
 
-                          <div className="mt-3 grid gap-2 text-sm text-slate-700">
-
-                            <p>
-                              <span className="font-semibold">
-                                Title:
-                              </span>{" "}
-                              {message.problem?.title ||
-                                "Untitled"}
-                            </p>
-
-                            <p>
-                              <span className="font-semibold">
-                                Category:
-                              </span>{" "}
-                              {message.problem?.category ||
-                                "General"}
-                            </p>
-
-                            <p>
-                              <span className="font-semibold">
-                                Priority:
-                              </span>{" "}
-                              {message.problem?.priority ||
-                                "MEDIUM"}
-                            </p>
-
-                          </div>
-
-                        </div>
-                      )}
+                    </div>
 
                   </div>
+                );
+              }
+            )}
 
-                </div>
-              );
-            })}
-
-            {/* ==================================================
-                AI LOADING
-            ================================================== */}
+            {/* AI LOADING */}
 
             {isSending && (
               <div className="flex justify-start">
@@ -1118,9 +1383,7 @@ function ReportProblemPage() {
               </div>
             )}
 
-            {/* ==================================================
-                ERROR
-            ================================================== */}
+            {/* ERROR */}
 
             {error && (
               <div className="flex justify-center">
@@ -1174,17 +1437,13 @@ function ReportProblemPage() {
 
                     </div>
 
-                    {/* STATUS */}
-
                     <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
                       DRAFT
                     </span>
 
                   </div>
 
-                  {/* ==================================================
-                      REPORT ID
-                  ================================================== */}
+                  {/* REPORT ID */}
 
                   <div className="mt-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
 
@@ -1211,6 +1470,7 @@ function ReportProblemPage() {
                         }
                         className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 transition hover:bg-blue-100"
                       >
+
                         {copiedReportId ? (
                           <>
                             <ClipboardCheck
@@ -1226,6 +1486,7 @@ function ReportProblemPage() {
                             Copy ID
                           </>
                         )}
+
                       </button>
 
                     </div>
@@ -1236,9 +1497,7 @@ function ReportProblemPage() {
 
                   </div>
 
-                  {/* ==================================================
-                      REPORT DETAILS
-                  ================================================== */}
+                  {/* REPORT DETAILS */}
 
                   <div className="mt-5 space-y-4">
 
@@ -1326,9 +1585,7 @@ function ReportProblemPage() {
 
                   </div>
 
-                  {/* ==================================================
-                      MEDIA UPLOAD
-                  ================================================== */}
+                  {/* MEDIA UPLOAD */}
 
                   <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
 
@@ -1385,9 +1642,7 @@ function ReportProblemPage() {
 
                     </div>
 
-                    {/* ==================================================
-                        MEDIA PREVIEWS
-                    ================================================== */}
+                    {/* MEDIA PREVIEWS */}
 
                     {attachments.length > 0 && (
                       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -1476,9 +1731,7 @@ function ReportProblemPage() {
 
                   </div>
 
-                  {/* ==================================================
-                      ACTIONS
-                  ================================================== */}
+                  {/* ACTIONS */}
 
                   <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
 
@@ -1489,7 +1742,9 @@ function ReportProblemPage() {
                         setAttachments([]);
                         textareaRef.current?.focus();
                       }}
-                      disabled={submitLoading}
+                      disabled={
+                        submitLoading
+                      }
                       className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                     >
                       Continue Editing
@@ -1497,7 +1752,9 @@ function ReportProblemPage() {
 
                     <button
                       type="button"
-                      onClick={handleSubmitDraft}
+                      onClick={
+                        handleSubmitDraft
+                      }
                       disabled={
                         submitLoading ||
                         uploading ||
@@ -1605,9 +1862,18 @@ function ReportProblemPage() {
                             supportedReport.pincode,
                           ].some(Boolean) && (
                             <p className="flex items-start gap-1">
-                              <MapPin size={15} className="mt-0.5 shrink-0 text-emerald-700" />
+
+                              <MapPin
+                                size={15}
+                                className="mt-0.5 shrink-0 text-emerald-700"
+                              />
+
                               <span>
-                                <span className="font-semibold">Location:</span>{" "}
+
+                                <span className="font-semibold">
+                                  Location:
+                                </span>{" "}
+
                                 {[
                                   supportedReport.address,
                                   supportedReport.city,
@@ -1617,7 +1883,9 @@ function ReportProblemPage() {
                                 ]
                                   .filter(Boolean)
                                   .join(", ")}
+
                               </span>
+
                             </p>
                           )}
 
@@ -1701,13 +1969,11 @@ function ReportProblemPage() {
                       className="flex-1 rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-amber-600 disabled:opacity-60"
                     >
 
-                      {supportLoading ? (
-                        "Supporting..."
-                      ) : supportedReport.supportedByMe ? (
-                        "✓ You Supported This"
-                      ) : (
-                        "Support This Problem"
-                      )}
+                      {supportLoading
+                        ? "Supporting..."
+                        : supportedReport.supportedByMe
+                        ? "✓ You Supported This"
+                        : "Support This Problem"}
 
                     </button>
 
@@ -1760,7 +2026,9 @@ function ReportProblemPage() {
 
                 <button
                   type="button"
-                  onClick={toggleVoiceInput}
+                  onClick={
+                    toggleVoiceInput
+                  }
                   disabled={isSending}
                   title={
                     isListening
@@ -1768,17 +2036,25 @@ function ReportProblemPage() {
                         ? "आवाज़ बंद करें"
                         : "Stop voice input"
                       : language === "hi"
-                        ? "बोलकर लिखें"
-                        : "Type with voice"
+                      ? "बोलकर लिखें"
+                      : "Type with voice"
                   }
                   aria-label={
                     isListening
                       ? "Stop voice input"
                       : "Start voice input"
                   }
-                  className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${isListening ? "border-red-200 bg-red-600 hover:bg-red-700" : "border-emerald-700 bg-emerald-700 hover:bg-emerald-800"}`}
+                  className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl border text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    isListening
+                      ? "border-red-200 bg-red-600 hover:bg-red-700"
+                      : "border-emerald-700 bg-emerald-700 hover:bg-emerald-800"
+                  }`}
                 >
-                  {isListening ? <MicOff size={19} /> : <Mic size={19} />}
+                  {isListening ? (
+                    <MicOff size={19} />
+                  ) : (
+                    <Mic size={19} />
+                  )}
                 </button>
 
                 <button
@@ -1790,6 +2066,7 @@ function ReportProblemPage() {
                   }
                   className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
+
                   {isSending ? (
                     <LoaderCircle
                       size={19}
@@ -1800,6 +2077,7 @@ function ReportProblemPage() {
                       size={19}
                     />
                   )}
+
                 </button>
 
               </div>
@@ -1825,10 +2103,13 @@ function ReportProblemPage() {
 
         {!supportedReport && (
           <div className="mt-3 flex items-center justify-center gap-2 text-center text-[11px] text-slate-400">
+
             <ShieldAlert size={13} />
+
             <span>
               Your report will only be submitted after you review and click Submit Report.
             </span>
+
           </div>
         )}
 

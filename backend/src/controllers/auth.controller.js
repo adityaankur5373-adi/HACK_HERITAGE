@@ -636,6 +636,10 @@ export async function registerGovernment(req, res) {
       password,
       employeeId,
       department,
+      designation,
+      office,
+      district,
+      state,
     } = req.body;
 
 
@@ -689,6 +693,10 @@ export async function registerGovernment(req, res) {
             email,
             employeeId,
             department,
+            designation,
+            office,
+            district,
+            state,
           },
         },
       },
@@ -716,6 +724,10 @@ export async function registerGovernment(req, res) {
         email: user.government.email,
         employeeId: user.government.employeeId,
         department: user.government.department,
+        designation: user.government.designation,
+        office: user.government.office,
+        district: user.government.district,
+        state: user.government.state,
       },
     });
 
@@ -803,6 +815,10 @@ export async function loginGovernment(req, res) {
         email: government.email,
         employeeId: government.employeeId,
         department: government.department,
+        designation: government.designation,
+        office: government.office,
+        district: government.district,
+        state: government.state,
       },
     });
 

@@ -4,11 +4,19 @@ import {
   Mic,
   PenLine,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { useLanguage } from "../../context/LanguageContext";
+import useAuthStore from "../../store/authStore";
 
 function Hero() {
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { t } = useLanguage();
+
+  const handleCitizenAction = () => {
+    navigate(isAuthenticated ? "/citizen/dashboard" : "/login");
+  };
 
   return (
     <section
@@ -210,6 +218,8 @@ function Hero() {
                   VOICE BUTTON
               =============================== */}
               <button
+                type="button"
+                onClick={handleCitizenAction}
                 className="
                   group
 
@@ -272,6 +282,8 @@ function Hero() {
                   TEXT BUTTON
               =============================== */}
               <button
+                type="button"
+                onClick={handleCitizenAction}
                 className="
                   group
 

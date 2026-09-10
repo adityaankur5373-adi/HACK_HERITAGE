@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.js";
 import { sendToAI,storeReportVector } from "../services/ai.service.js";
-
+import { routeReportToGovernment } 
+  from "./governmentReportController.js";
 export const reportProblem = async (req, res) => {
   try {
     const { message, conversationId } = req.body;
@@ -32,33 +33,57 @@ export const reportProblem = async (req, res) => {
     // --------------------------------------------------
     // GET OR CREATE CONVERSATION
     // --------------------------------------------------
+// --------------------------------------------------
+// GET OR CREATE CONVERSATION
+// --------------------------------------------------
 
-    let conversation;
+let conversation;
 
-    if (conversationId) {
-      conversation =
-        await prisma.reportConversation.findFirst({
-          where: {
-            id: conversationId,
-            citizenId: citizen.id,
-            status: "ACTIVE",
-          },
-        });
+if (conversationId) {
+  // Find the requested conversation belonging to this citizen
+  const existingConversation =
+    await prisma.reportConversation.findFirst({
+      where: {
+        id: conversationId,
+        citizenId: citizen.id,
+      },
+    });
 
-      if (!conversation) {
-        return res.status(404).json({
-          message: "Conversation not found",
-        });
-      }
-    } else {
-      conversation =
-        await prisma.reportConversation.create({
-          data: {
-            citizenId: citizen.id,
-          },
-        });
-    }
+  if (!existingConversation) {
+    return res.status(404).json({
+      message: "Conversation not found",
+    });
+  }
 
+  // ----------------------------------------------
+  // OLD CONVERSATION IS COMPLETED
+  // → CREATE A BRAND NEW CONVERSATION
+  // ----------------------------------------------
+
+  if (existingConversation.status === "COMPLETED") {
+    conversation = await prisma.reportConversation.create({
+      data: {
+        citizenId: citizen.id,
+        status: "ACTIVE",
+      },
+    });
+  } else {
+    // Continue existing active conversation
+    conversation = existingConversation;
+  }
+} else {
+  // ----------------------------------------------
+  // NO CONVERSATION ID
+  // → CREATE BRAND NEW CONVERSATION
+  // ----------------------------------------------
+
+  conversation = await prisma.reportConversation.create({
+    data: {
+      citizenId: citizen.id,
+      status: "ACTIVE",
+    },
+  });
+}
     // --------------------------------------------------
     // SAVE USER MESSAGE
     // --------------------------------------------------
@@ -101,18 +126,16 @@ export const reportProblem = async (req, res) => {
     });
 
     // --------------------------------------------------
-    // SAVE AI QUESTION
+    // SAVE COMPLETE AI RESPONSE
     // --------------------------------------------------
 
-    if (aiResponse.question) {
-      await prisma.reportMessage.create({
-        data: {
-          conversationId: conversation.id,
-          role: "assistant",
-          content: aiResponse.question,
-        },
-      });
-    }
+    await prisma.reportMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: "assistant",
+        content: JSON.stringify(aiResponse),
+      },
+    });
 
     // --------------------------------------------------
     // CREATE / UPDATE DRAFT REPORT
@@ -188,7 +211,6 @@ export const reportProblem = async (req, res) => {
 
 
 
-
 export const submitReport = async (req, res) => {
   try {
     const { reportId } = req.params;
@@ -206,6 +228,7 @@ export const submitReport = async (req, res) => {
 
     if (!citizen) {
       return res.status(404).json({
+        success: false,
         message: "Citizen profile not found",
       });
     }
@@ -224,6 +247,7 @@ export const submitReport = async (req, res) => {
 
     if (!report) {
       return res.status(404).json({
+        success: false,
         message: "Draft report not found",
       });
     }
@@ -232,47 +256,80 @@ export const submitReport = async (req, res) => {
     // SUBMIT REPORT + CLOSE CONVERSATION
     // ---------------------------------------------
 
-    const submittedReport = await prisma.$transaction(async (tx) => {
-      // 1. Change report status
-      const updatedReport = await tx.report.update({
-        where: {
-          id: report.id,
-        },
+    const submittedReport = await prisma.$transaction(
+      async (tx) => {
 
-        data: {
-          status: "SUBMITTED",
-        },
-      });
+        // 1. Change report status
+        const updatedReport = await tx.report.update({
+          where: {
+            id: report.id,
+          },
 
-      // 2. Create status history
-      await tx.reportStatusHistory.create({
-        data: {
-          reportId: report.id,
-          status: "SUBMITTED",
-          note: "Report submitted by citizen",
-          changedBy: citizen.id,
-        },
-      });
+          data: {
+            status: "SUBMITTED",
+          },
+        });
 
-      // 3. Close the conversation
-      await tx.reportConversation.update({
-        where: {
-          id: report.conversationId,
-        },
+        // 2. Create status history
+        await tx.reportStatusHistory.create({
+          data: {
+            reportId: report.id,
+            status: "SUBMITTED",
+            note: "Report submitted by citizen",
+            changedBy: citizen.id,
+          },
+        });
 
-        data: {
-          status: "COMPLETED",
-        },
-      });
+        // 3. Close conversation
+        await tx.reportConversation.update({
+          where: {
+            id: report.conversationId,
+          },
 
-      return updatedReport;
-    });
+          data: {
+            status: "COMPLETED",
+          },
+        });
+
+        return updatedReport;
+      }
+    );
+
+    // ---------------------------------------------
+    // ROUTE REPORT TO GOVERNMENT
+    // ---------------------------------------------
+
+    let routingResult = null;
+
+    try {
+      routingResult = await routeReportToGovernment(
+        submittedReport.id
+      );
+
+      console.log(
+        "Government routing result:",
+        routingResult
+      );
+
+    } catch (routingError) {
+
+      console.error(
+        "Government routing failed:",
+        routingError.message
+      );
+
+      // Do NOT fail citizen submission.
+      //
+      // Report is already SUBMITTED.
+      // Routing can be retried later.
+    }
 
     // ---------------------------------------------
     // STORE SUBMITTED REPORT IN QDRANT
     // ---------------------------------------------
 
     try {
+
       await storeReportVector({
         id: submittedReport.id,
 
@@ -294,15 +351,15 @@ export const submitReport = async (req, res) => {
 
         pincode: submittedReport.pincode,
       });
+
     } catch (vectorError) {
+
       console.error(
         "Vector indexing failed:",
         vectorError.message
       );
 
-      // Do not fail the report submission.
-      // The report is already SUBMITTED.
-      //
+      // Do not fail submission.
       // Qdrant indexing can be retried later.
     }
 
@@ -311,24 +368,39 @@ export const submitReport = async (req, res) => {
     // ---------------------------------------------
 
     return res.status(200).json({
+
+      success: true,
+
       message: "Report submitted successfully",
 
       report: submittedReport,
 
       conversationClosed: true,
+
+      governmentRouting: routingResult
+        ? {
+            assigned: routingResult.assigned,
+            department: routingResult.department || null,
+            routingLevel: routingResult.routingLevel || null,
+          }
+        : null,
     });
 
   } catch (error) {
+
     console.error(
       "Submit Report Error:",
       error
     );
 
     return res.status(500).json({
+      success: false,
       message: "Failed to submit report",
     });
   }
 };
+
+
 
 export const getReportConversation = async (req, res) => {
   try {
@@ -336,11 +408,14 @@ export const getReportConversation = async (req, res) => {
     const userId = req.user.id;
 
     const citizen = await prisma.citizen.findUnique({
-      where: { userId },
+      where: {
+        userId,
+      },
     });
 
     if (!citizen) {
       return res.status(404).json({
+        success: false,
         message: "Citizen profile not found",
       });
     }
@@ -362,11 +437,13 @@ export const getReportConversation = async (req, res) => {
 
     if (!conversation) {
       return res.status(404).json({
+        success: false,
         message: "Conversation not found",
       });
     }
 
     return res.status(200).json({
+      success: true,
       conversationId: conversation.id,
       status: conversation.status,
       messages: conversation.messages,
@@ -376,6 +453,7 @@ export const getReportConversation = async (req, res) => {
     console.error("Get Report Conversation Error:", error);
 
     return res.status(500).json({
+      success: false,
       message: "Failed to fetch report conversation",
     });
   }

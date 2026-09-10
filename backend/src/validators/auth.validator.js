@@ -220,6 +220,30 @@ export const governmentRegisterSchema = z.object({
     .trim()
     .min(2, "Department is required")
     .max(100, "Department must not exceed 100 characters"),
+
+  designation: z
+    .string()
+    .trim()
+    .min(2, "Designation is required")
+    .max(100, "Designation must not exceed 100 characters"),
+
+  office: z
+    .string()
+    .trim()
+    .min(2, "Office is required")
+    .max(150, "Office must not exceed 150 characters"),
+
+  district: z
+    .string()
+    .trim()
+    .min(2, "District is required")
+    .max(100, "District must not exceed 100 characters"),
+
+  state: z
+    .string()
+    .trim()
+    .min(2, "State is required")
+    .max(100, "State must not exceed 100 characters"),
 });
 
 

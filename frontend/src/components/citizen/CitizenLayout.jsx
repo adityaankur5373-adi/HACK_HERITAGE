@@ -59,10 +59,18 @@ function CitizenLayout({ title, children, actions }) {
           className={`fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white text-slate-700 shadow-xl transition-transform duration-200 ${drawerOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
         >
           <div className="flex h-16 items-center justify-between border-b border-slate-200 px-6">
-            <div>
+            <button
+              type="button"
+              onClick={() => {
+                navigate("/");
+                setDrawerOpen(false);
+              }}
+              className="text-left"
+              aria-label="Go to JanSamadhan homepage"
+            >
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-800">JanSamadhan</p>
               <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400">Citizen Services</p>
-            </div>
+            </button>
             <button
               type="button"
               className="rounded-lg p-2 text-slate-600 hover:bg-emerald-50 lg:hidden"
