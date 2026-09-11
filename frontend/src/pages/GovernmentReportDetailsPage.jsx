@@ -10,6 +10,8 @@ import { useParams } from "react-router-dom";
 import api from "../services/api";
 import GovernmentLayout from "../components/government/GovernmentLayout";
 
+const API_ORIGIN = (api.defaults.baseURL || "").replace(/\/api\/?$/, "");
+
 export default function GovernmentReportDetailsPage() {
   const { reportId } = useParams();
 
@@ -229,7 +231,7 @@ export default function GovernmentReportDetailsPage() {
                 {media.map((item) => {
                   const mediaUrl = item.url?.startsWith("http")
                     ? item.url
-                    : `http://localhost:5000${item.url}`;
+                    : `${API_ORIGIN}/${item.url?.replace(/^\//, "")}`;
 
                   if (item.type === "VIDEO") {
                     return (
@@ -312,8 +314,30 @@ export default function GovernmentReportDetailsPage() {
                 </button>
               )}
 
+              {/* VERIFIED */}
+              {report.status === "VERIFIED" && (
+                <button
+                  disabled={saving}
+                  onClick={() => review("IMPLEMENTATION")}
+                  className="bg-orange-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  Start Implementation
+                </button>
+              )}
+
+              {/* IMPLEMENTATION */}
+              {report.status === "IMPLEMENTATION" && (
+                <button
+                  disabled={saving}
+                  onClick={() => review("RESOLVED")}
+                  className="bg-emerald-700 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+                >
+                  Mark Resolved
+                </button>
+              )}
+
               {/* REJECT */}
-              {["SUBMITTED", "UNDER_REVIEW"].includes(
+              {["SUBMITTED", "UNDER_REVIEW", "VERIFIED"].includes(
                 report.status
               ) && (
                 <button

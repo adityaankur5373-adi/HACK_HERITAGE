@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ArrowLeft, Building2, Eye, EyeOff, GraduationCap, Landmark, LockKeyhole, Mail, University, UserRound } from "lucide-react";
+import { ArrowLeft, Building2, Eye, EyeOff, GraduationCap, Landmark, Loader2, LockKeyhole, Mail, University, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import useAuthStore from "../store/authStore";
 import useLanguage from "../context/useLanguage";
+import useToast from "../context/useToast";
 
 const roleConfig = {
   student: {
@@ -81,6 +82,7 @@ function RoleAuth({ role }) {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const { t } = useLanguage();
+  const toast = useToast();
   const config = roleConfig[role];
   const Icon = config.icon;
   const roleLabel = t.roleAuth.roles[config.key] || "Industry Leader";
@@ -102,16 +104,19 @@ function RoleAuth({ role }) {
 
     if (!form.email?.trim() || !password) {
       setError(t.roleAuth.emailPasswordRequired);
+      toast(t.roleAuth.emailPasswordRequired, "error");
       return;
     }
 
     if (isRegister && (config.requiredFields || config.fields.map(([field]) => field)).some((field) => !form[field]?.trim())) {
       setError(t.roleAuth.completeFields);
+      toast(t.roleAuth.completeFields, "error");
       return;
     }
 
     if (password.length < 8) {
       setError(t.roleAuth.passwordRequired);
+      toast(t.roleAuth.passwordRequired, "error");
       return;
     }
 
@@ -132,6 +137,12 @@ function RoleAuth({ role }) {
       }
 
       login(data.token, data.user);
+      toast(
+        isRegister
+          ? `${roleLabel} account created successfully`
+          : "Signed in successfully",
+        "success"
+      );
       navigate(config.dashboard, { replace: true });
     } catch (requestError) {
       const validationMessage = requestError.response?.data?.errors
@@ -142,6 +153,12 @@ function RoleAuth({ role }) {
         validationMessage ||
         requestError.response?.data?.message ||
           t.roleAuth.networkError
+      );
+      toast(
+        validationMessage ||
+          requestError.response?.data?.message ||
+          t.roleAuth.networkError,
+        "error"
       );
     } finally {
       setLoading(false);
@@ -156,7 +173,7 @@ function RoleAuth({ role }) {
       </div>
 
       <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
-        <section className={`w-full rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8 ${isRegister && ["government", "university"].includes(role) ? "max-w-2xl" : "max-w-md"}`}>
+        <section className={`w-full rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8 ${isRegister && ["government", "university", "industry"].includes(role) ? "max-w-2xl" : "max-w-md"}`}>
           <button
             type="button"
             onClick={() => navigate("/login")}
@@ -187,7 +204,7 @@ function RoleAuth({ role }) {
 
           <form onSubmit={submit} className="space-y-4">
             {isRegister && (
-              <div className={["government", "university", "industry"].includes(role) ? "grid gap-4 sm:grid-cols-2" : "space-y-4"}>
+              <div className={["government", "university", "industry"].includes(role) ? "grid gap-4 md:grid-cols-2" : "space-y-4"}>
                 {config.fields.map(([field, fieldKey]) => (
               <label key={field} className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-700">{t.roleAuth.fields[fieldKey].label}</span>
@@ -258,7 +275,12 @@ function RoleAuth({ role }) {
               disabled={loading}
               className="h-11 w-full rounded-lg bg-green-800 text-sm font-semibold text-white transition hover:bg-green-900 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? t.roleAuth.pleaseWait : isRegister ? t.roleAuth.createAccount : t.roleAuth.login}
+              {loading ? (
+                <span className="inline-flex items-center justify-center gap-2">
+                  <Loader2 size={16} className="animate-spin" />
+                  {t.roleAuth.pleaseWait}
+                </span>
+              ) : isRegister ? t.roleAuth.createAccount : t.roleAuth.login}
             </button>
           </form>
 

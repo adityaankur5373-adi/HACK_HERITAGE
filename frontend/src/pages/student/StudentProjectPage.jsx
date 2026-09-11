@@ -41,7 +41,7 @@ export default function StudentProjectPage() {
   const team = project?.studentTeams?.find((item) => item.id === project.studentTeamId) || project?.studentTeams?.[0];
   const solution = team?.solutions?.[0];
   const canEdit = solution?.status !== "UNIVERSITY_APPROVED" && solution?.status !== "REJECTED";
-  const isLeader = project.currentStudentRole === "LEADER";
+  const isLeader = project?.currentStudentRole === "LEADER";
   const members = useMemo(() => team?.members || [], [team]);
 
   const saveSolution = async (event, submit) => {
@@ -89,7 +89,7 @@ export default function StudentProjectPage() {
         <section className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">
           <h2 className="text-xl font-bold">{team?.name || "My team"}</h2>
           <p className="mt-2 text-sm text-slate-600">{members.map((member) => `${member.student?.name}${member.role === "LEADER" ? " (Leader)" : " (Member)"}`).filter(Boolean).join(", ") || "Team members unavailable"}</p>
-          <p className="mt-2 text-xs font-semibold text-slate-500">Your role: {statusLabel(project.currentStudentRole)}</p>
+          <p className="mt-2 text-xs font-semibold text-slate-500">Your role: {statusLabel(project?.currentStudentRole)}</p>
         </section>
 
         <form onSubmit={(event) => saveSolution(event, false)} className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">

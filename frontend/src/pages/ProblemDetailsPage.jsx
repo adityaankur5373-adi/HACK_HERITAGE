@@ -8,10 +8,7 @@ import api from "../services/api";
 import useLanguage from "../context/useLanguage";
 import { formatDate, getStatusTone, readReports } from "../utils/citizenStorage";
 
-const API_ORIGIN = (
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000/api"
-).replace(/\/api\/?$/, "");
+const API_ORIGIN = (api.defaults.baseURL || "").replace(/\/api\/?$/, "");
 
 function getMediaUrl(url) {
   if (!url) {
