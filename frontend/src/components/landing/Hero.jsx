@@ -381,9 +381,6 @@ function Hero() {
               "
             >
 
-              {/* =================================
-                  MAP CONTAINER
-              ================================= */}
               <div
                 className="
                   relative
@@ -391,68 +388,72 @@ function Hero() {
                   w-full
                   aspect-square
 
-                  rounded-[35%]
-
+                  overflow-hidden
+                  rounded-[30%]
                   bg-white/35
-
-                  backdrop-blur-[2px]
-
-                  border
-                  border-white/60
-
-                  shadow-lg
-
-                  flex
-                  items-center
-                  justify-center
+                  p-5
+                  shadow-xl
+                  backdrop-blur-[3px]
                 "
               >
+                <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-orange-300/30 blur-3xl" />
+                <div className="pointer-events-none absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-emerald-300/30 blur-3xl" />
+                <svg
+                  viewBox="0 0 420 500"
+                  role="img"
+                  aria-label="Map of India with civic service locations"
+                  className="relative h-full w-full drop-shadow-[0_18px_18px_rgba(15,81,50,0.2)]"
+                >
+                  <defs>
+                    <linearGradient id="indiaTricolor" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#f59e0b" />
+                      <stop offset="45%" stopColor="#fff7ed" />
+                      <stop offset="100%" stopColor="#16a34a" />
+                    </linearGradient>
+                    <filter id="mapGlow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="7" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
 
-                {/* Temporary Map Placeholder */}
-                <div className="text-center px-5">
+                  <path
+                    d="M190 18 224 31 245 56 276 66 291 91 326 104 316 126 344 145 330 166 351 190 334 207 340 235 318 251 309 281 290 294 278 331 260 353 249 389 230 416 213 471 198 449 185 414 166 389 151 356 128 336 119 306 96 288 101 265 77 247 84 224 62 210 78 191 70 169 92 158 88 134 111 123 120 98 145 88 149 65 176 55 165 34Z"
+                    fill="url(#indiaTricolor)"
+                    stroke="#166534"
+                    strokeWidth="5"
+                    strokeLinejoin="round"
+                    filter="url(#mapGlow)"
+                  />
 
-                  <div
-                    className="
-                      text-6xl
-                      sm:text-7xl
-                      md:text-8xl
-                    "
-                  >
-                    🗺️
-                  </div>
+                  <g fill="none" stroke="#166534" strokeOpacity=".28" strokeWidth="2">
+                    <path d="m126 123 54 20 51-12 49 37-28 34 41 34-56 34 16 44-43 22-31-36" />
+                    <path d="m91 191 63 13 31 32-25 43 42 27 13 55" />
+                    <path d="m181 42 14 52-16 48 24 43 46 14" />
+                    <path d="m275 65-20 40 18 43 45 18" />
+                    <path d="m119 306 47-27 56 22 38-18" />
+                  </g>
 
-                  <h2
-                    className="
-                      mt-3
-                      sm:mt-4
+                  <g fill="#fff" stroke="#166534" strokeWidth="3">
+                    <circle cx="197" cy="160" r="7" />
+                    <circle cx="157" cy="236" r="7" />
+                    <circle cx="224" cy="305" r="7" />
+                    <circle cx="253" cy="371" r="7" />
+                  </g>
+                  <g fill="#166534">
+                    <circle cx="197" cy="160" r="3" />
+                    <circle cx="157" cy="236" r="3" />
+                    <circle cx="224" cy="305" r="3" />
+                    <circle cx="253" cy="371" r="3" />
+                  </g>
+                </svg>
 
-                      text-2xl
-                      sm:text-3xl
-                      md:text-4xl
-
-                      font-bold
-
-                      text-green-900
-                    "
-                  >
-                    Jharkhand
-                  </h2>
-
-                  <p
-                    className="
-                      mt-2
-
-                      text-sm
-                      sm:text-base
-
-                      text-gray-600
-                    "
-                  >
-                    Problems across Jharkhand
-                  </p>
-
+                <div className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/80 bg-white/85 px-4 py-2 text-center shadow-md backdrop-blur-sm">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-900">One nation</p>
+                  <p className="mt-0.5 text-[11px] text-slate-600">Every voice, every community</p>
                 </div>
-
               </div>
 
             </div>
