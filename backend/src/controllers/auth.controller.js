@@ -218,6 +218,11 @@ export async function registerUniversity(req, res) {
       email,
       password,
       registrationNumber,
+      address,
+      city,
+      district,
+      state,
+      pincode,
     } = req.body;
 
 
@@ -269,6 +274,11 @@ export async function registerUniversity(req, res) {
             name,
             email,
             registrationNumber,
+            address: address?.trim() || null,
+            city: city?.trim() || null,
+            district: district?.trim() || null,
+            state: state?.trim() || null,
+            pincode: pincode?.trim() || null,
           },
         },
       },
@@ -296,6 +306,11 @@ export async function registerUniversity(req, res) {
         email: user.university.email,
         registrationNumber:
           user.university.registrationNumber,
+        address: user.university.address,
+        city: user.university.city,
+        district: user.university.district,
+        state: user.university.state,
+        pincode: user.university.pincode,
       },
     });
 
@@ -383,6 +398,11 @@ export async function loginUniversity(req, res) {
         email: university.email,
         registrationNumber:
           university.registrationNumber,
+        address: university.address,
+        city: university.city,
+        district: university.district,
+        state: university.state,
+        pincode: university.pincode,
       },
     });
 
@@ -484,7 +504,7 @@ export async function registerStudent(req, res) {
             name,
             email,
             studentId,
-            universityId,
+            universityId: university.id,
           },
         },
       },
@@ -703,6 +723,9 @@ export async function registerGovernment(req, res) {
 
       include: {
         government: true,
+        industry: true,
+
+        industry: true,
       },
     });
 
@@ -882,9 +905,11 @@ export async function getMe(req, res) {
       });
     }
 
+    const { passwordHash, ...safeUser } = user;
+
     return res.status(200).json({
       success: true,
-      user,
+      user: safeUser,
     });
 
   } catch (error) {
@@ -895,4 +920,69 @@ export async function getMe(req, res) {
       message: "Failed to fetch user",
     });
   }
+}
+
+export async function registerIndustry(req, res) {
+  try {
+    const {
+      name,
+      email,
+      password,
+      registrationNumber,
+      address,
+      area,
+      city,
+      district,
+      state,
+      pincode,
+    } = req.body;
+    if (![name, email, password, registrationNumber].every((value) => typeof value === "string" && value.trim())) return res.status(400).json({ success: false, message: "Name, email, password and registration number are required" });
+    if (await prisma.industry.findFirst({ where: { OR: [{ email: email.trim() }, { registrationNumber: registrationNumber.trim() }] } })) return res.status(409).json({ success: false, message: "Industry email or registration number is already registered" });
+    const user = await prisma.user.create({
+      data: {
+        passwordHash: await bcrypt.hash(password, 12),
+        role: "INDUSTRY",
+        industry: {
+          create: {
+            name: name.trim(),
+            email: email.trim(),
+            registrationNumber: registrationNumber.trim(),
+            address: address?.trim() || null,
+            area: area?.trim() || null,
+            city: city?.trim() || null,
+            district: district?.trim() || null,
+            state: state?.trim() || null,
+            pincode: pincode?.trim() || null,
+          },
+        },
+      },
+      include: { industry: true },
+    });
+    return res.status(201).json({
+      success: true,
+      message: "Industry registered successfully",
+      token: generateToken(user),
+      user: {
+        id: user.id,
+        role: user.role,
+        name: user.industry.name,
+        email: user.industry.email,
+        registrationNumber: user.industry.registrationNumber,
+        address: user.industry.address,
+        area: user.industry.area,
+        city: user.industry.city,
+        district: user.industry.district,
+        state: user.industry.state,
+        pincode: user.industry.pincode,
+      },
+    });
+  } catch (error) { console.error("Industry Register Error:", error); return res.status(500).json({ success: false, message: "Failed to register industry" }); }
+}
+export async function loginIndustry(req, res) {
+  try {
+    const { email, password } = req.body;
+    const industry = await prisma.industry.findUnique({ where: { email: String(email || "").trim() }, include: { user: true } });
+    if (!industry || !industry.user.isActive || !(await bcrypt.compare(String(password || ""), industry.user.passwordHash))) return res.status(401).json({ success: false, message: "Invalid email or password" });
+    return res.json({ success: true, message: "Login successful", token: generateToken(industry.user), user: { id: industry.userId, role: industry.user.role, name: industry.name, email: industry.email, registrationNumber: industry.registrationNumber } });
+  } catch (error) { console.error("Industry Login Error:", error); return res.status(500).json({ success: false, message: "Failed to login" }); }
 }

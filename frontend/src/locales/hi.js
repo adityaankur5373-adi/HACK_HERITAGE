@@ -154,6 +154,11 @@ const hi = {
 
       button: "जारी रखें",
     },
+    industry: {
+      title: "उद्योग नेतृत्व",
+      description: "प्रभावशाली सामुदायिक समस्याओं के समाधान में व्यावहारिक योगदान दें।",
+      button: "जारी रखें",
+    },
 
     bottomMessage:
       "आपकी आवाज़ एक बेहतर झारखंड बनाने में मदद कर सकती है।",
@@ -337,6 +342,7 @@ const hi = {
       student: "छात्र",
       university: "विश्वविद्यालय",
       government: "सरकार",
+      industry: "उद्योग नेतृत्व",
     },
     fields: {
       name: { label: "पूरा नाम", placeholder: "अपना पूरा नाम दर्ज करें" },
@@ -351,6 +357,11 @@ const hi = {
       office: { label: "कार्यालय", placeholder: "अपना कार्यालय दर्ज करें" },
       district: { label: "जिला", placeholder: "अपना जिला दर्ज करें" },
       state: { label: "राज्य", placeholder: "अपना राज्य दर्ज करें" },
+      industryName: { label: "कंपनी का नाम", placeholder: "कंपनी का नाम दर्ज करें" },
+      address: { label: "पता", placeholder: "पता दर्ज करें" },
+      area: { label: "क्षेत्र", placeholder: "क्षेत्र दर्ज करें" },
+      city: { label: "शहर", placeholder: "शहर दर्ज करें" },
+      pincode: { label: "पिनकोड", placeholder: "पिनकोड दर्ज करें" },
     },
     backToRoles: "भूमिका चुनें",
     create: "बनाएं",

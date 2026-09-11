@@ -15,6 +15,8 @@ import {
   loginGovernment,
 
   getMe,
+  registerIndustry,
+  loginIndustry,
 } from "../controllers/auth.controller.js";
 
 
@@ -36,6 +38,8 @@ import {
 
   governmentRegisterSchema,
   governmentLoginSchema,
+  industryRegisterSchema,
+  industryLoginSchema,
 } from "../validators/auth.validator.js";
 
 
@@ -119,6 +123,17 @@ router.post(
   "/government/login",
   validate(governmentLoginSchema),
   loginGovernment
+);
+
+router.post(
+  "/industry/register",
+  validate(industryRegisterSchema),
+  registerIndustry
+);
+router.post(
+  "/industry/login",
+  validate(industryLoginSchema),
+  loginIndustry
 );
 
 

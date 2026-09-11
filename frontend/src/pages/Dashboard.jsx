@@ -1,7 +1,7 @@
 import { LogOut, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import useAuthStore from "../store/authStore";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 
 function Dashboard() {
   const navigate = useNavigate();

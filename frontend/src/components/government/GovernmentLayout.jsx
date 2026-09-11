@@ -12,7 +12,7 @@ import {
 
 import { useLocation, useNavigate } from "react-router-dom";
 import useAuthStore from "../../store/authStore";
-import { useLanguage } from "../../context/LanguageContext";
+import useLanguage from "../../context/useLanguage";
 
 const items = [
   {

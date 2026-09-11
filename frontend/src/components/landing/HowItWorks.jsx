@@ -5,7 +5,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-import { useLanguage } from "../../context/LanguageContext";
+import useLanguage from "../../context/useLanguage";
 
 function HowItWorks() {
   const { t } = useLanguage();

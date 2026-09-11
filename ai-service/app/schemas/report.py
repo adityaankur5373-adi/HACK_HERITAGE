@@ -84,3 +84,18 @@ class ReportResponse(BaseModel):
     question: Optional[str] = None
     problem: Optional[Problem] = None
     duplicateCheck: Optional[DuplicateCheck] = None
+
+
+    # ---------------------------------------------
+# UNIVERSITY MATCHING
+# ---------------------------------------------
+
+class UniversityRequirements(BaseModel):
+    skills: List[str] = Field(default_factory=list)
+    researchAreas: List[str] = Field(default_factory=list)
+    technologies: List[str] = Field(default_factory=list)
+    departments: List[str] = Field(default_factory=list)
+
+
+class UniversityMatchingResponse(BaseModel):
+    requirements: UniversityRequirements

@@ -4,7 +4,7 @@ import { AlertCircle } from "lucide-react";
 import CitizenLayout from "../components/citizen/CitizenLayout";
 import api from "../services/api";
 import useAuthStore from "../store/authStore";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 
 function ProfilePage() {
   const { user } = useAuthStore();

@@ -3,15 +3,15 @@ import {
   GraduationCap,
   University,
   Landmark,
+  Building2,
   Globe,
-  ArrowLeft,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 
 import RoleCard from "../components/role/RoleCard";
 
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 
 function Login() {
   const navigate = useNavigate();
@@ -53,6 +53,14 @@ function Login() {
       icon: Landmark,
       theme: "green",
       path: "/login/government",
+    },
+    {
+      title: t.login.industry.title,
+      description: t.login.industry.description,
+      buttonText: t.login.industry.button,
+      icon: Building2,
+      theme: "green",
+      path: "/login/industry",
     },
   ];
 
@@ -449,12 +457,12 @@ function Login() {
 
               grid-cols-1
               sm:grid-cols-2
-              lg:grid-cols-4
+              lg:grid-cols-5
 
-              gap-4
-              lg:gap-5
+              gap-3
+              lg:gap-4
 
-              max-w-6xl
+              max-w-7xl
 
               mx-auto
             "

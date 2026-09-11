@@ -129,6 +129,12 @@ export const universityRegisterSchema = z.object({
     .trim()
     .min(3, "Registration number must be at least 3 characters")
     .max(50, "Registration number must not exceed 50 characters"),
+
+  address: z.string().trim().max(255).optional(),
+  city: z.string().trim().max(100).optional(),
+  district: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(100).optional(),
+  pincode: z.string().trim().max(20).optional(),
 });
 
 
@@ -248,6 +254,45 @@ export const governmentRegisterSchema = z.object({
 
 
 export const governmentLoginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address"),
+
+  password: z
+    .string()
+    .min(1, "Password is required"),
+});
+
+export const industryRegisterSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Industry name must be at least 2 characters")
+    .max(150, "Industry name must not exceed 150 characters"),
+
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address"),
+
+  password: passwordSchema,
+
+  registrationNumber: z
+    .string()
+    .trim()
+    .min(3, "Registration number must be at least 3 characters")
+    .max(50, "Registration number must not exceed 50 characters"),
+
+  address: z.string().trim().max(255).optional(),
+  area: z.string().trim().max(100).optional(),
+  city: z.string().trim().max(100).optional(),
+  district: z.string().trim().max(100).optional(),
+  state: z.string().trim().max(100).optional(),
+  pincode: z.string().trim().max(20).optional(),
+});
+
+export const industryLoginSchema = z.object({
   email: z
     .string()
     .trim()

@@ -1,5 +1,5 @@
 import express from "express";
-import { protect } from "../middleware/auth.middleware.js";
+import { protect, requireCitizen } from "../middleware/auth.middleware.js";
 
 import {
   getReportById,
@@ -9,14 +9,13 @@ import {
 
 const router = express.Router();
 
-router.get("/", protect, getReports);
-router.get("/:reportId", protect, getReportById);
+router.use(protect, requireCitizen);
+router.get("/", getReports);
+router.get("/:reportId", getReportById);
 
 router.post(
   "/:reportId/support",
-  protect,
   supportReport
 );
 
 export default router;
-

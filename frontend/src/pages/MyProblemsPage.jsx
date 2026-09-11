@@ -13,7 +13,7 @@ import {
 
 import CitizenLayout from "../components/citizen/CitizenLayout";
 import api from "../services/api";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 import { formatDate, getStatusTone } from "../utils/citizenStorage";
 
 function MyProblemsPage() {

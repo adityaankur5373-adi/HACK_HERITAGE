@@ -62,7 +62,7 @@ export function readSupportedReports() {
   try {
     const raw = localStorage.getItem(SUPPORT_STORAGE_KEY);
     return raw ? JSON.parse(raw) : {};
-  } catch (error) {
+  } catch {
     return {};
   }
 }

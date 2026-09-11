@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -9,11 +9,13 @@ import {
   MapPin,
   RefreshCw,
   TrendingUp,
-  XCircle,
 } from "lucide-react";
 
 import GovernmentLayout from "../components/government/GovernmentLayout";
 import api from "../services/api";
+
+const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
 
 /*
 |--------------------------------------------------------------------------
@@ -83,7 +85,7 @@ export default function GovernmentAnalyticsPage() {
   |--------------------------------------------------------------------------
   */
 
-  const loadAnalytics = async ({
+  const loadAnalytics = useCallback(async ({
     showLoader = true,
   } = {}) => {
     try {
@@ -116,7 +118,7 @@ export default function GovernmentAnalyticsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   /*
   |--------------------------------------------------------------------------
@@ -125,8 +127,8 @@ export default function GovernmentAnalyticsPage() {
   */
 
   useEffect(() => {
-    loadAnalytics();
-  }, []);
+    void Promise.resolve().then(loadAnalytics);
+  }, [loadAnalytics]);
 
   /*
   |--------------------------------------------------------------------------
@@ -135,22 +137,22 @@ export default function GovernmentAnalyticsPage() {
   */
 
   const summary =
-    analytics?.summary || {};
+    analytics?.summary || EMPTY_OBJECT;
 
   const statusDistribution =
-    analytics?.statusDistribution || [];
+    analytics?.statusDistribution || EMPTY_ARRAY;
 
   const categoryDistribution =
-    analytics?.categoryDistribution || [];
+    analytics?.categoryDistribution || EMPTY_ARRAY;
 
   const priorityDistribution =
-    analytics?.priorityDistribution || [];
+    analytics?.priorityDistribution || EMPTY_ARRAY;
 
   const locationDistribution =
-    analytics?.locationDistribution || [];
+    analytics?.locationDistribution || EMPTY_ARRAY;
 
   const monthlyTrend =
-    analytics?.monthlyTrend || [];
+    analytics?.monthlyTrend || EMPTY_ARRAY;
 
   /*
   |--------------------------------------------------------------------------

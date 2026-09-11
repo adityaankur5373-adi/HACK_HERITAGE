@@ -1,14 +1,10 @@
-import { createContext, useContext, useState } from "react";
+import { useState } from "react";
 
 import en from "../locales/en";
 import hi from "../locales/hi";
+import LanguageContext from "./languageContextValue";
 
-const translations = {
-  en,
-  hi,
-};
-
-const LanguageContext = createContext();
+const translations = { en, hi };
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => {
@@ -39,8 +35,4 @@ export function LanguageProvider({ children }) {
       {children}
     </LanguageContext.Provider>
   );
-}
-
-export function useLanguage() {
-  return useContext(LanguageContext);
 }

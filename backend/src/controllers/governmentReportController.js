@@ -330,6 +330,27 @@ export async function getGovernmentDashboard(req, res) {
                 },
               },
 
+              // NEW: University recommendations
+              universityRecommendations: {
+                orderBy: {
+                  score: "desc",
+                },
+
+                include: {
+                  university: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      city: true,
+                      district: true,
+                      state: true,
+                      pincode: true,
+                    },
+                  },
+                },
+              },
+
               _count: {
                 select: {
                   supports: true,
@@ -459,6 +480,27 @@ export async function getGovernmentReports(req, res) {
                 },
               },
 
+              // NEW: University recommendations
+              universityRecommendations: {
+                orderBy: {
+                  score: "desc",
+                },
+
+                include: {
+                  university: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      city: true,
+                      district: true,
+                      state: true,
+                      pincode: true,
+                    },
+                  },
+                },
+              },
+
               _count: {
                 select: {
                   supports: true,
@@ -538,6 +580,27 @@ export async function getGovernmentReportById(req, res) {
               statusHistory: {
                 orderBy: {
                   createdAt: "asc",
+                },
+              },
+
+              // NEW: University recommendations
+              universityRecommendations: {
+                orderBy: {
+                  score: "desc",
+                },
+
+                include: {
+                  university: {
+                    select: {
+                      id: true,
+                      name: true,
+                      email: true,
+                      city: true,
+                      district: true,
+                      state: true,
+                      pincode: true,
+                    },
+                  },
                 },
               },
 

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Calendar, CheckCircle2, Edit3, LoaderCircle, MapPin, ThumbsUp } from "lucide-react";
+import { AlertCircle, Calendar, CheckCircle2, Edit3, LoaderCircle, ThumbsUp } from "lucide-react";
 
 import CitizenLayout from "../components/citizen/CitizenLayout";
 import api from "../services/api";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 import { formatDate, getStatusTone, readReports } from "../utils/citizenStorage";
 
 const API_ORIGIN = (
@@ -87,7 +87,7 @@ function ProblemDetailsPage() {
     return () => {
       active = false;
     };
-  }, [reportId]);
+  }, [reportId, t.citizen?.details?.notFound]);
 
   const isDraft = String(report?.status || "").toUpperCase() === "DRAFT";
 

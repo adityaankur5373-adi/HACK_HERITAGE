@@ -17,7 +17,7 @@ import {
 
 import api from "../services/api";
 import useAuthStore from "../store/authStore";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 
 const CitizenAuth = () => {
   const navigate = useNavigate();

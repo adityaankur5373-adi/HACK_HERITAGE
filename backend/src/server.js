@@ -3,12 +3,16 @@ import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
-
+import universityCapabilityRoutes from "./routes/universityCapabilityRoutes.js";
+import universityRoutes from "./routes/universityRoutes.js";
+import studentRoutes from "./routes/studentRoutes.js";
+import industryRoutes from "./routes/industryRoutes.js";
 import citizenRoutes from "./routes/citizen.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import reportRoutes from "./routes/report.routes.js";
 import governmentRoutes from "./routes/governmentRoutes.js";
 import governmentNotificationRoutes from "./routes/governmentNotificationRoutes.js";
+import universityNotificationRoutes from "./routes/universityNotificationRoutes.js";
 import governmentAnalyticsRoutes from "./routes/governmentAnalyticsRoutes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
@@ -138,12 +142,26 @@ app.use(
   governmentNotificationRoutes
 );
 
+app.use(
+  "/api/university/notifications",
+  universityNotificationRoutes
+);
+
 
 
 app.use(
   "/api/government/analytics",
   governmentAnalyticsRoutes
 );
+
+app.use(
+  "/api/university/capabilities",
+  universityCapabilityRoutes
+);
+
+app.use("/api/university", universityRoutes);
+app.use("/api/student", studentRoutes);
+app.use("/api/industry", industryRoutes);
 app.use((req, res) => {
   return res.status(404).json({
     success: false,

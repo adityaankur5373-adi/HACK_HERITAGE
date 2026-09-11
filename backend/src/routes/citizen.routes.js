@@ -4,7 +4,7 @@ import {
   reportProblem,
   submitReport,
 } from "../controllers/citizen.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
+import { protect, requireCitizen } from "../middleware/auth.middleware.js";
 import {uploadReportMedia} from "../controllers/reportMedia.controller.js";
 import {
   uploadReportFiles,
@@ -12,27 +12,25 @@ import {
 
 const router = express.Router();
 
+router.use(protect, requireCitizen);
+
 router.post(
   "/report",
-  protect,
   reportProblem
 );
 
 router.get(
   "/report/conversation/:conversationId",
-  protect,
   getReportConversation
 );
 
 router.post(
   "/report/:reportId/submit",
-   protect,
   submitReport
 );
 
 router.post(
   "/:reportId/media",
-  protect,
   uploadReportFiles.array("files", 10),
   uploadReportMedia
 );

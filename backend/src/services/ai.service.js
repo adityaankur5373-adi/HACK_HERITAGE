@@ -22,7 +22,8 @@ export const sendToAI = async ({
         content: message.content,
       })),
 
-      citizen_location: citizenLocation || null,
+      citizen_location:
+        citizenLocation || null,
     }
   );
 
@@ -67,4 +68,67 @@ export const storeReportVector = async ({
   );
 
   return response.data;
+};
+
+
+// ==================================================
+// GENERATE UNIVERSITY REQUIREMENTS
+// ==================================================
+
+export const generateUniversityRequirements =
+  async (report) => {
+
+    const response = await axios.post(
+      `${AI_SERVICE_URL}/api/ai/university-requirements`,
+      {
+        title: report.title,
+
+        description:
+          report.description,
+
+        category:
+          report.category,
+
+        priority:
+          report.priority,
+
+        location:
+          report.location || null,
+      }
+    );
+
+    return response.data;
+  };
+
+
+// ==================================================
+// MATCH UNIVERSITIES USING QDRANT
+// ==================================================
+
+export const matchUniversitiesByRequirements =
+  async (requirements) => {
+
+    const response = await axios.post(
+      `${AI_SERVICE_URL}/api/ai/match-universities`,
+      {
+        requirements,
+      }
+    );
+
+    return response.data?.matches || [];
+};
+
+export const storeIndustryVector = async ({ industryId, industry }) => {
+  const response = await axios.post(`${AI_SERVICE_URL}/api/ai/store-industry`, { industryId, industry });
+  return response.data;
+};
+
+export const generateIndustryRequirements = async (solution) => {
+  const response = await axios.post(`${AI_SERVICE_URL}/api/ai/industry-requirements`, { solution });
+  return response.data;
+};
+
+export const matchIndustriesByRequirements = async (requirements) => {
+  const response = await axios.post(`${AI_SERVICE_URL}/api/ai/match-industries`, { requirements });
+  return response.data?.matches || [];
 };

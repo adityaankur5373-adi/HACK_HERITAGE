@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { ArrowLeft, Eye, EyeOff, GraduationCap, Landmark, LockKeyhole, Mail, University, UserRound } from "lucide-react";
+import { ArrowLeft, Building2, Eye, EyeOff, GraduationCap, Landmark, LockKeyhole, Mail, University, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import useAuthStore from "../store/authStore";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 
 const roleConfig = {
   student: {
@@ -18,6 +18,7 @@ const roleConfig = {
       ["studentId", "studentId"],
       ["universityId", "universityId"],
     ],
+    requiredFields: ["name", "email", "studentId", "universityId"],
   },
   university: {
     key: "university",
@@ -29,7 +30,13 @@ const roleConfig = {
       ["name", "universityName"],
       ["email", "email"],
       ["registrationNumber", "registrationNumber"],
+      ["address", "address"],
+      ["city", "city"],
+      ["district", "district"],
+      ["state", "state"],
+      ["pincode", "pincode"],
     ],
+    requiredFields: ["name", "email", "registrationNumber"],
   },
   government: {
     key: "government",
@@ -47,6 +54,26 @@ const roleConfig = {
       ["district", "district"],
       ["state", "state"],
     ],
+    requiredFields: ["name", "email", "employeeId", "department", "designation", "office", "district", "state"],
+  },
+  industry: {
+    key: "industry",
+    icon: Building2,
+    registerPath: "/auth/industry/register",
+    loginPath: "/auth/industry/login",
+    dashboard: "/industry/dashboard",
+    fields: [
+      ["name", "industryName"],
+      ["email", "email"],
+      ["registrationNumber", "registrationNumber"],
+      ["address", "address"],
+      ["area", "area"],
+      ["city", "city"],
+      ["district", "district"],
+      ["state", "state"],
+      ["pincode", "pincode"],
+    ],
+    requiredFields: ["name", "email", "registrationNumber"],
   },
 };
 
@@ -56,6 +83,7 @@ function RoleAuth({ role }) {
   const { t } = useLanguage();
   const config = roleConfig[role];
   const Icon = config.icon;
+  const roleLabel = t.roleAuth.roles[config.key] || "Industry Leader";
   const [isRegister, setIsRegister] = useState(false);
   const [form, setForm] = useState({});
   const [password, setPassword] = useState("");
@@ -77,7 +105,7 @@ function RoleAuth({ role }) {
       return;
     }
 
-    if (isRegister && config.fields.some(([field]) => !form[field]?.trim())) {
+    if (isRegister && (config.requiredFields || config.fields.map(([field]) => field)).some((field) => !form[field]?.trim())) {
       setError(t.roleAuth.completeFields);
       return;
     }
@@ -128,7 +156,7 @@ function RoleAuth({ role }) {
       </div>
 
       <main className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl items-center justify-center">
-        <section className={`w-full rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8 ${role === "government" && isRegister ? "max-w-2xl" : "max-w-md"}`}>
+        <section className={`w-full rounded-2xl border border-white/80 bg-white/90 p-6 shadow-2xl backdrop-blur sm:p-8 ${isRegister && ["government", "university"].includes(role) ? "max-w-2xl" : "max-w-md"}`}>
           <button
             type="button"
             onClick={() => navigate("/login")}
@@ -145,21 +173,21 @@ function RoleAuth({ role }) {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-green-700">{t.login.badge}</p>
               <h1 className="text-2xl font-bold text-slate-900">
                 {isRegister
-                  ? `${t.roleAuth.create} ${t.roleAuth.roles[config.key]} ${t.roleAuth.account}`
-                  : `${t.roleAuth.roles[config.key]} ${t.roleAuth.login}`}
+                  ? `${t.roleAuth.create} ${roleLabel} ${t.roleAuth.account}`
+                  : `${roleLabel} ${t.roleAuth.login}`}
               </h1>
             </div>
           </div>
 
           <p className="mb-6 text-sm text-slate-500">
             {isRegister
-              ? `${t.roleAuth.registerToAccess} ${t.roleAuth.roles[config.key].toLowerCase()} ${t.roleAuth.portal}.`
-              : `${t.roleAuth.signInTo} ${t.roleAuth.roles[config.key].toLowerCase()} ${t.roleAuth.portal}.`}
+              ? `${t.roleAuth.registerToAccess} ${roleLabel.toLowerCase()} ${t.roleAuth.portal}.`
+              : `${t.roleAuth.signInTo} ${roleLabel.toLowerCase()} ${t.roleAuth.portal}.`}
           </p>
 
           <form onSubmit={submit} className="space-y-4">
             {isRegister && (
-              <div className={role === "government" ? "grid gap-4 sm:grid-cols-2" : "space-y-4"}>
+              <div className={["government", "university", "industry"].includes(role) ? "grid gap-4 sm:grid-cols-2" : "space-y-4"}>
                 {config.fields.map(([field, fieldKey]) => (
               <label key={field} className="block">
                 <span className="mb-1 block text-xs font-semibold text-slate-700">{t.roleAuth.fields[fieldKey].label}</span>

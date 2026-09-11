@@ -122,6 +122,11 @@ const en = {
         "Review public complaints, assign departments, and monitor issue resolution.",
       button: "Continue",
     },
+    industry: {
+      title: "Industry Leader",
+      description: "Discover high-impact community problems and contribute practical solutions.",
+      button: "Continue",
+    },
 
     bottomMessage:
       "Your voice can help build a better Jharkhand.",
@@ -305,6 +310,7 @@ const en = {
       student: "Student",
       university: "University",
       government: "Government",
+      industry: "Industry Leader",
     },
     fields: {
       name: { label: "Full Name", placeholder: "Enter your full name" },
@@ -319,6 +325,11 @@ const en = {
       office: { label: "Office", placeholder: "Enter your office" },
       district: { label: "District", placeholder: "Enter your district" },
       state: { label: "State", placeholder: "Enter your state" },
+      industryName: { label: "Company Name", placeholder: "Enter company name" },
+      address: { label: "Address", placeholder: "Enter address" },
+      area: { label: "Area", placeholder: "Enter area" },
+      city: { label: "City", placeholder: "Enter city" },
+      pincode: { label: "Pincode", placeholder: "Enter pincode" },
     },
     backToRoles: "Back to roles",
     create: "Create",

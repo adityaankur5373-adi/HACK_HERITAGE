@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-import { useLanguage } from "../../context/LanguageContext";
+import useLanguage from "../../context/useLanguage";
 import useAuthStore from "../../store/authStore";
 
 function Hero() {

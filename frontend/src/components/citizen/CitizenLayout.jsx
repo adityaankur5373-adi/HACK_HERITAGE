@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import useAuthStore from "../../store/authStore";
-import { useLanguage } from "../../context/LanguageContext";
+import useLanguage from "../../context/useLanguage";
 
 const navItems = [
   { key: "dashboard", path: "/citizen/dashboard", icon: LayoutDashboard },
@@ -44,8 +44,6 @@ function CitizenLayout({ title, children, actions }) {
     logout();
     navigate("/login", { replace: true });
   };
-
-  const activePage = navItems.find((item) => location.pathname.startsWith(item.path));
 
   return (
     <div className="relative min-h-screen bg-[#f4f7f5] text-slate-800">

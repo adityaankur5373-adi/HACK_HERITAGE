@@ -82,7 +82,7 @@ function RoleCard({
         transition-all
         duration-300
 
-        min-h-[390px]
+        min-h-[350px]
       `}
     >
 
@@ -99,12 +99,12 @@ function RoleCard({
 
       {/* Icon section */}
 
-      <div className="flex justify-center pt-10">
+      <div className="flex justify-center pt-7">
 
         <div
           className={`
-            w-24
-            h-24
+            w-20
+            h-20
 
             rounded-3xl
 
@@ -147,16 +147,16 @@ function RoleCard({
 
           text-center
 
-          px-6
-          pt-7
-          pb-7
+          px-4
+          pt-5
+          pb-5
         "
       >
 
         <h2
           className="
-            text-xl
-            sm:text-2xl
+            text-lg
+            sm:text-xl
             font-bold
             text-gray-900
           "
@@ -167,9 +167,9 @@ function RoleCard({
 
         <p
           className="
-            mt-3
+            mt-2
             text-sm
-            sm:text-base
+            sm:text-sm
             text-gray-500
             leading-relaxed
           "

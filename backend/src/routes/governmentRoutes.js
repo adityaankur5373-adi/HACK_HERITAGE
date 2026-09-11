@@ -9,6 +9,9 @@ import {
 import {
   updateGovernmentReportStatus,
 } from "../controllers/governmentReviewController.js";
+import { selectReportUniversities } from "../controllers/governmentUniversitySelectionController.js";
+import { getGovernmentReportSolutions, selectGovernmentSolution } from "../controllers/governmentSolutionController.js";
+import { getGovernmentIndustryRecommendations, selectReportIndustries } from "../controllers/governmentIndustryController.js";
 
 import {
   protect,
@@ -63,5 +66,14 @@ router.patch(
   "/reports/:reportId/review",
   updateGovernmentReportStatus
 );
+
+router.patch(
+  "/reports/:reportId/universities",
+  selectReportUniversities
+);
+router.get("/reports/:reportId/solutions", getGovernmentReportSolutions);
+router.patch("/solutions/:solutionId/select", selectGovernmentSolution);
+router.get("/reports/:reportId/industries", getGovernmentIndustryRecommendations);
+router.patch("/reports/:reportId/industries", selectReportIndustries);
 
 export default router;

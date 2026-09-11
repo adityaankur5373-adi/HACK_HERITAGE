@@ -67,6 +67,13 @@ export const uploadReportMedia = async (req, res) => {
       media.push(savedMedia);
     }
 
+    if (media.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No supported image or video files were uploaded",
+      });
+    }
+
     return res.status(201).json({
       message: "Media uploaded successfully",
       media,

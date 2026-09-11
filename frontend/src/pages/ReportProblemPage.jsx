@@ -4,7 +4,6 @@ import {
   CheckCircle2,
   Clipboard,
   ClipboardCheck,
-  FileImage,
   LoaderCircle,
   MapPin,
   Mic,
@@ -20,7 +19,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import CitizenLayout from "../components/citizen/CitizenLayout";
 import api from "../services/api";
-import { useLanguage } from "../context/LanguageContext";
+import useLanguage from "../context/useLanguage";
 import { readReports, upsertReport } from "../utils/citizenStorage";
 
 const EMPTY_AI_MESSAGE = {
@@ -425,7 +424,7 @@ function ReportProblemPage() {
       setTimeout(() => {
         setCopiedReportId(false);
       }, 2000);
-    } catch (error) {
+    } catch {
       console.error(
         "Unable to copy report ID:",
         error
@@ -803,7 +802,7 @@ function ReportProblemPage() {
 
     try {
       recognition.start();
-    } catch (error) {
+    } catch {
       recognitionRef.current = null;
       setIsListening(false);
 

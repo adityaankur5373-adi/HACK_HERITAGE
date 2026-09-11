@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -236,7 +236,7 @@ export default function GovernmentNotificationsPage() {
   |--------------------------------------------------------------------------
   */
 
-  const loadNotifications = async ({
+  const loadNotifications = useCallback(async ({
     showLoader = true,
   } = {}) => {
     try {
@@ -269,7 +269,7 @@ export default function GovernmentNotificationsPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
   /*
   |--------------------------------------------------------------------------
@@ -278,8 +278,8 @@ export default function GovernmentNotificationsPage() {
   */
 
   useEffect(() => {
-    loadNotifications();
-  }, []);
+    void Promise.resolve().then(loadNotifications);
+  }, [loadNotifications]);
 
   /*
   |--------------------------------------------------------------------------

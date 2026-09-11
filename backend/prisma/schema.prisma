@@ -12,6 +12,7 @@ enum Role {
   STUDENT
   UNIVERSITY
   GOVERNMENT
+  INDUSTRY
   ADMIN
 }
 
@@ -25,6 +26,7 @@ model User {
   student    Student?
   university University?
   government Government?
+  industry Industry?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,10 +79,34 @@ model University {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  students Student[]
+ students Student[]
+ capabilities UniversityCapability[]
+ recommendations UniversityRecommendation[]
+ invitations UniversityProblemInvitation[]
+ notifications UniversityNotification[]
+ projects UniversityProject[]
+ studentTeams StudentTeam[]
+ solutions UniversitySolution[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model UniversityCapability {
+  id String @id @default(cuid())
+
+  universityId String
+
+  type  String
+  value String
+
+  university University @relation(fields: [universityId],references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([universityId])
+  @@index([type])
+  @@index([value])
+  @@unique([universityId, type, value])
 }
 
 model Student {
@@ -101,6 +127,7 @@ model Student {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   university University @relation(fields: [universityId], references: [id], onDelete: Restrict)
+  teamMemberships StudentTeamMember[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -125,6 +152,8 @@ model Government {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   reportAssignments GovernmentReportAssignment[]
+  universityInvitations UniversityProblemInvitation[]
+  industryInvitations IndustryCollaborationInvitation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -178,9 +207,16 @@ model Report {
   citizen      Citizen            @relation(fields: [citizenId], references: [id], onDelete: Cascade)
   conversation ReportConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   governmentNotifications GovernmentNotification[]
+  universityNotifications UniversityNotification[]
   statusHistory        ReportStatusHistory[]
   media                ReportMedia[]
   supports             ReportSupport[]
+  universityRecommendations UniversityRecommendation[]
+  universityInvitations UniversityProblemInvitation[]
+  universityProjects UniversityProject[]
+  universitySolutions UniversitySolution[]
+  industryRecommendations IndustryRecommendation[]
+  industryInvitations IndustryCollaborationInvitation[]
   governmentAssignment GovernmentReportAssignment?
 }
 
@@ -265,4 +301,226 @@ model GovernmentNotification {
   @@index([reportId])
   @@index([governmentId, isRead])
   @@unique([governmentId, reportId, type])
+}
+
+
+model UniversityRecommendation {
+  id String @id @default(cuid())
+
+  reportId     String
+  universityId String
+
+  score       Float
+  reason      String?
+  status      String @default("RECOMMENDED")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade )
+
+  university University @relation(  fields: [universityId],references: [id],onDelete: Cascade )
+
+  @@unique([reportId, universityId])
+  @@index([reportId])
+  @@index([universityId])
+  @@index([status])
+}
+
+model UniversityProblemInvitation {
+  id                     String   @id @default(cuid())
+  reportId               String
+  universityId           String
+  invitedByGovernmentId  String
+  status                 String   @default("INVITED")
+  message                String?
+  createdAt              DateTime @default(now())
+  respondedAt            DateTime?
+  updatedAt              DateTime @updatedAt
+
+  report                 Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  university             University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  invitedByGovernment    Government @relation(fields: [invitedByGovernmentId], references: [id], onDelete: Restrict)
+  project                UniversityProject?
+
+  @@unique([reportId, universityId])
+  @@index([universityId, status])
+  @@index([reportId])
+  @@index([invitedByGovernmentId])
+}
+
+model UniversityProject {
+  id           String   @id @default(cuid())
+  reportId     String
+  universityId String
+  invitationId String   @unique
+  status       String   @default("TEAM_FORMATION")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  report     Report                       @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  university University                   @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  invitation UniversityProblemInvitation  @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+  studentTeams StudentTeam[]
+  solutions UniversitySolution[]
+  industryContributions IndustryContribution[]
+
+  @@index([universityId, status])
+  @@index([reportId])
+}
+
+model StudentTeam {
+  id           String   @id @default(cuid())
+  projectId    String
+  universityId String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project     UniversityProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  university  University        @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  members     StudentTeamMember[]
+  solutions   UniversitySolution[]
+
+  @@index([universityId])
+}
+
+model StudentTeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  studentId String
+  role      String   @default("MEMBER")
+  createdAt DateTime @default(now())
+
+  team    StudentTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  student Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, studentId])
+  @@index([studentId])
+}
+
+model UniversitySolution {
+  id                 String   @id @default(cuid())
+  projectId          String
+  reportId           String
+  universityId       String
+  teamId             String
+  title              String
+  description        String
+  technologies       Json?
+  estimatedCost      String?
+  estimatedDuration  String?
+  implementationPlan String?
+  status             String   @default("DRAFT")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  project    UniversityProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  report     Report            @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  university University        @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  team       StudentTeam       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId])
+  @@index([projectId, status])
+  @@index([reportId])
+  @@index([universityId])
+}
+
+model UniversityNotification {
+  id           String   @id @default(cuid())
+  universityId String
+  reportId     String
+  type         String
+  title        String
+  message      String
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  university University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  report     Report     @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([universityId, reportId, type])
+  @@index([universityId, isRead])
+  @@index([reportId])
+}
+
+model Industry {
+  id String @id @default(cuid())
+  userId String @unique
+  email String @unique
+  name String
+  registrationNumber String @unique
+  description String?
+  address String?
+  area String?
+  city String?
+  district String?
+  state String?
+  pincode String?
+  phone String?
+  website String?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  capabilities IndustryCapability[]
+  recommendations IndustryRecommendation[]
+  invitations IndustryCollaborationInvitation[]
+  contributions IndustryContribution[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model IndustryCapability {
+  id String @id @default(cuid())
+  industryId String
+  type String
+  value String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  @@unique([industryId, type, value])
+  @@index([industryId])
+}
+model IndustryRecommendation {
+  id String @id @default(cuid())
+  reportId String
+  industryId String
+  score Float
+  reason String?
+  status String @default("RECOMMENDED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  @@unique([reportId, industryId])
+  @@index([reportId])
+}
+model IndustryCollaborationInvitation {
+  id String @id @default(cuid())
+  reportId String
+  industryId String
+  invitedByGovernmentId String
+  status String @default("INVITED")
+  message String?
+  createdAt DateTime @default(now())
+  respondedAt DateTime?
+  updatedAt DateTime @updatedAt
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  government Government @relation(fields: [invitedByGovernmentId], references: [id], onDelete: Restrict)
+  @@unique([reportId, industryId])
+  @@index([industryId, status])
+}
+model IndustryContribution {
+  id String @id @default(cuid())
+  projectId String
+  industryId String
+  type String
+  description String
+  estimatedCost String?
+  timeline String?
+  status String @default("PROPOSED")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project UniversityProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  @@index([industryId])
 }
