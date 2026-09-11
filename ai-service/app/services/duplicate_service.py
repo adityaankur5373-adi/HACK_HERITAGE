@@ -28,6 +28,7 @@ def _same_problem_context(problem, payload):
 
     A report can only be considered a possible duplicate when:
     - Category matches
+    - Explicit address/locality does not conflict
     - Explicit state does not conflict
     - Explicit district does not conflict
     - Explicit city does not conflict
@@ -60,6 +61,7 @@ def _same_problem_context(problem, payload):
     # ==================================================
 
     for field in (
+        "address",
         "state",
         "district",
         "city",

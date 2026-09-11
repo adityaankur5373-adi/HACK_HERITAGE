@@ -22,10 +22,21 @@ export async function selectGovernmentSolution(req, res) {
     if (solution.status !== "UNIVERSITY_APPROVED") return res.status(409).json({ success: false, message: "Only university-approved solutions may be selected" });
     const existing = await prisma.universitySolution.findFirst({ where: { reportId: solution.reportId, status: "APPROVED" } });
     if (existing) return res.status(409).json({ success: false, message: "A final solution has already been selected for this report" });
-    const selected = await prisma.$transaction(async (tx) => {
-      await tx.universitySolution.updateMany({ where: { reportId: solution.reportId, status: "UNIVERSITY_APPROVED", id: { not: solution.id } }, data: { status: "NOT_SELECTED" } });
-      return tx.universitySolution.update({ where: { id: solution.id }, data: { status: "APPROVED" }, include: includeSolution });
-    });
+    const [, selected] = await prisma.$transaction([
+      prisma.universitySolution.updateMany({
+        where: {
+          reportId: solution.reportId,
+          status: "UNIVERSITY_APPROVED",
+          id: { not: solution.id },
+        },
+        data: { status: "NOT_SELECTED" },
+      }),
+      prisma.universitySolution.update({
+        where: { id: solution.id },
+        data: { status: "APPROVED" },
+        include: includeSolution,
+      }),
+    ]);
     try {
       await matchIndustriesForSolution(selected.id);
     } catch (error) {

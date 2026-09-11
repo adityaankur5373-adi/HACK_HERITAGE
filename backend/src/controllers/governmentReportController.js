@@ -11,7 +11,9 @@ const DEPARTMENT_BY_CATEGORY = {
 
   SANITATION: "Sanitation Department",
   WASTE: "Sanitation Department",
+  "WASTE MANAGEMENT": "Sanitation Department",
   GARBAGE: "Sanitation Department",
+  "GARBAGE COLLECTION": "Sanitation Department",
 
   ROAD: "Public Works Department",
   ROADS: "Public Works Department",
@@ -69,10 +71,21 @@ function getDepartmentFromCategory(category) {
 */
 
 async function findGovernmentForReport(report) {
+  const normalizedCategory = normalize(report.category);
   const department = getDepartmentFromCategory(report.category);
 
   const district = report.district?.trim();
   const state = report.state?.trim();
+
+  console.log("========== GOVERNMENT ROUTING ==========");
+  console.log("Raw report category:", report.category);
+  console.log("Normalized category:", normalizedCategory);
+  console.log("Mapped department:", department);
+  console.log("Report city:", report.city);
+  console.log("Report district:", report.district);
+  console.log("Report state:", report.state);
+  console.log("Report pincode:", report.pincode);
+  console.log("========================================");
 
   /*
   |--------------------------------------------------------------------------
@@ -191,6 +204,17 @@ async function findGovernmentForReport(report) {
         routingLevel: "STATE",
       };
     }
+  }
+
+  // Do not route a location-bearing report to an unrelated department-only
+  // office when no compatible district/state office exists.
+  if (district || state) {
+    console.log("No location-compatible government office found:", {
+      department,
+      district,
+      state,
+    });
+    return null;
   }
 
   /*
