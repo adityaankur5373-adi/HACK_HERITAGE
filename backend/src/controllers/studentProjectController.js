@@ -2,19 +2,45 @@ import prisma from "../config/prisma.js";
 
 const includeProject = { report: { include: { media: true, governmentAssignment: { include: { government: { select: { name: true, department: true, office: true } } } } } }, university: { select: { id: true, name: true } }, studentTeams: { include: { members: { include: { student: { select: { id: true, name: true, course: true, department: true } } } }, solutions: true } } };
 
+function withProjectSolutions(project) {
+  return {
+    ...project,
+    solutions: project.studentTeams.flatMap((team) =>
+      team.solutions.map((solution) => ({
+        ...solution,
+        team: {
+          id: team.id,
+          name: team.name,
+        },
+      }))
+    ),
+  };
+}
+
 async function findProject(studentId, projectId) {
   const project = await prisma.universityProject.findFirst({ where: { id: projectId, studentTeams: { some: { members: { some: { studentId } } } } }, include: includeProject });
   if (!project) return null;
-  const currentTeam = project.studentTeams.find((team) => team.members.some((member) => member.student.id === studentId));
+  const projectWithSolutions = withProjectSolutions(project);
+  const currentTeam = projectWithSolutions.studentTeams.find((team) => team.members.some((member) => member.student.id === studentId));
   return {
-    ...project,
+    ...projectWithSolutions,
     studentTeamId: currentTeam?.id || null,
     currentStudentRole: currentTeam?.members.find((member) => member.student.id === studentId)?.role || null,
   };
 }
 
 export async function getStudentProjects(req, res) {
-  try { const projects = await prisma.universityProject.findMany({ where: { studentTeams: { some: { members: { some: { studentId: req.student.id } } } } }, include: includeProject, orderBy: { updatedAt: "desc" } }); return res.json({ success: true, projects }); }
+  try {
+    const projects = await prisma.universityProject.findMany({
+      where: { studentTeams: { some: { members: { some: { studentId: req.student.id } } } } },
+      include: includeProject,
+      orderBy: { updatedAt: "desc" },
+    });
+    return res.json({
+      success: true,
+      projects: projects.map(withProjectSolutions),
+    });
+  }
   catch (error) { console.error("Student projects error:", error); return res.status(500).json({ success: false, message: "Unable to load projects" }); }
 }
 export async function getStudentProject(req, res) {

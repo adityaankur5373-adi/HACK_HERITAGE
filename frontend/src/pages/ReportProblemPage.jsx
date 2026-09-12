@@ -295,12 +295,26 @@ function ReportProblemPage() {
           }
         }
       } catch (err) {
-        if (err.response?.status !== 404) {
-          console.error(
-            "Restore report conversation error:",
-            err
+        if (err.response?.status === 404) {
+          // The session can outlive a deleted conversation or a database reset.
+          sessionStorage.removeItem("citizenConversationId");
+          sessionStorage.removeItem(
+            `citizenMessages_${conversationId}`
           );
+          setConversationId("");
+          setMessages([
+            {
+              ...EMPTY_AI_MESSAGE,
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+          return;
         }
+
+        console.error(
+          "Restore report conversation error:",
+          err
+        );
       }
     };
 
@@ -661,6 +675,24 @@ function ReportProblemPage() {
         setSupportedReport(null);
       }
     } catch (err) {
+      if (err.response?.status === 404 && conversationId) {
+        sessionStorage.removeItem("citizenConversationId");
+        sessionStorage.removeItem(
+          `citizenMessages_${conversationId}`
+        );
+        setConversationId("");
+        setMessages([
+          {
+            ...EMPTY_AI_MESSAGE,
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+        setError(
+          "Your previous report conversation is no longer available. Please start a new report."
+        );
+        return;
+      }
+
       console.error(
         "Send report message error:",
         err

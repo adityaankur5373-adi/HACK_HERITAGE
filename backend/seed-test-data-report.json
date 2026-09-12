@@ -1,0 +1,135 @@
+{
+  "startedAt": "2026-09-11T19:27:43.283Z",
+  "baseUrl": "http://127.0.0.1:5000",
+  "created": {
+    "fallbackReports": 0
+  },
+  "reused": {
+    "government": 1,
+    "citizens": 5,
+    "universities": 5,
+    "students": 15,
+    "industries": 5
+  },
+  "skipped": [
+    {
+      "type": "university",
+      "key": "test.university.ranchi.iot@jansamadhan.test",
+      "reason": "Existing @jansamadhan.test record could not be logged in; it was not modified",
+      "status": 401
+    },
+    {
+      "type": "student",
+      "key": "u1.01",
+      "reason": "Parent university could not be authenticated"
+    },
+    {
+      "type": "student",
+      "key": "u1.02",
+      "reason": "Parent university could not be authenticated"
+    },
+    {
+      "type": "student",
+      "key": "u1.03",
+      "reason": "Parent university could not be authenticated"
+    }
+  ],
+  "failures": [],
+  "verification": {
+    "counts": {
+      "governments": 2,
+      "citizens": 6,
+      "universities": 7,
+      "students": 21,
+      "industries": 7,
+      "reports": 6,
+      "assignments": 9
+    },
+    "reports": [
+      {
+        "id": "cmtxcjv4a0004die0tvvmot2j",
+        "status": "SUBMITTED",
+        "title": "Irregular Garbage Collection in Lalpur",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      },
+      {
+        "id": "cmtxck7ac0009die02bvdl5va",
+        "status": "SUBMITTED",
+        "title": "Improper Waste Segregation in Kanke Road",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      },
+      {
+        "id": "cmtxbqzh9004ndifwekhzl32r",
+        "status": "SUBMITTED",
+        "title": "Overflowing Community Garbage Bins in Doranda",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      },
+      {
+        "id": "cmtx3h6ii0014idpg0hrux09j",
+        "status": "RESOLVED",
+        "title": "Garbage problem in my area",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      },
+      {
+        "id": "cmtxbs8im004zdifwr8hntvh8",
+        "status": "SUBMITTED",
+        "title": "Open Garbage Dumping in Bariatu",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      },
+      {
+        "id": "cmtxckowi000edie0g39ujgku",
+        "status": "SUBMITTED",
+        "title": "Garbage Accumulation Near School in Ashok Nagar",
+        "governmentAssignment": {
+          "department": "Sanitation Department",
+          "government": {
+            "email": "test.gov.sanitation.ranchi@jansamadhan.test",
+            "district": "Ranchi",
+            "state": "Jharkhand"
+          }
+        }
+      }
+    ],
+    "routing": {
+      "targetGovernmentEmail": "test.gov.sanitation.ranchi@jansamadhan.test",
+      "assignedToTarget": 6,
+      "allFiveAssignedToTarget": true
+    }
+  },
+  "completedAt": "2026-09-11T19:30:25.789Z"
+}
